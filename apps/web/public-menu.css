@@ -273,3 +273,21 @@ html:has(#reelsViewer[open]) { overflow: hidden; scrollbar-gutter: stable; }
 @media (forced-colors: active) {
   .reels-bar button, .demo-video button, #reelsPosition, #reelsHint, .reels-details { background: Canvas; color: CanvasText; }
 }
+
+/* Quiet chrome, with the original 44px hit areas and contrast intact. */
+.reels-bar button, .demo-video button { border-color: transparent; }
+#reelsPosition { border-radius: 6px; }
+.reels-navigation { background: none; gap: 2px 8px; padding-block-end: max(5px, env(safe-area-inset-bottom)); }
+.reels-navigation button { grid-row: 1; }
+#previousReel { grid-column: 1; }
+#nextReel { grid-column: 3; }
+#reelsHint { grid-column: 2; grid-row: 1; }
+#reelsProgress { grid-row: 2; margin: 0; }
+#reelsHint[hidden] { display: none; }
+.reels-sr-only {
+  position: absolute; inline-size: 1px; block-size: 1px; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+@media (forced-colors: active) {
+  .reels-bar button, .demo-video button { border-color: ButtonText; }
+}

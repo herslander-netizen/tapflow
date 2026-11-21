@@ -52,11 +52,13 @@ function videoOption(base,name,photo,layer){
     player=video;
     layer.append(video);
     button.textContent="Voltar à foto";
+    status.classList.remove("reels-sr-only");
     status.textContent="Carregando animação…";
     function reset(message){
       if(player!==video)return;
       release();
       button.textContent="Ver em vídeo";
+      status.classList.toggle("reels-sr-only", message==="Animação demonstrativa · sem áudio");
       status.textContent=message;
     }
     function unavailable(){reset("O vídeo não carregou. A foto e a descrição continuam disponíveis.");}
@@ -79,6 +81,7 @@ function videoOption(base,name,photo,layer){
       clearTimeout(timer);
       photo.hidden=true;
       video.hidden=false;
+      status.classList.add("reels-sr-only");
       status.textContent="Animação demonstrativa · sem áudio";
     });
     video.addEventListener("ended",()=>reset("Animação demonstrativa · sem áudio"));
@@ -180,7 +183,9 @@ function activate(index){
   active=index;reelSession.index=index;
   position.textContent=(index+1)+" de "+slides.length;
   progress.max=slides.length;progress.value=index+1;
-  hint.textContent=slides.length===1?"Único prato nesta seleção":index===slides.length-1?"↓ Deslize para ver anteriores":"↑ Deslize para ver mais";
+  // Show a cue when the viewer opens, then leave only the controls and progress.
+  hint.hidden=reelSession.shown||slides.length<=1;
+  hint.textContent=index===slides.length-1?"↓ Deslize para ver anteriores":"↑ Deslize para ver mais";
   for(let i=0;i<slides.length;i++)slides[i].slide.inert=i!==index;
   previous.setAttribute("aria-disabled",String(index===0));
   next.setAttribute("aria-disabled",String(index===slides.length-1));

@@ -47,6 +47,7 @@ const server=createServer(async(req,res)=>{
  await page.emulateMedia({reducedMotion:"no-preference"});
  await page.locator(".item-title-trigger").filter({hasText:items[1].name}).click();
  await dialog.waitFor();
+ await dialog.locator("#reelsHint").waitFor({state:"visible"});
  await page.waitForFunction(()=>{const v=document.querySelector("video");return v&&!v.paused&&v.currentTime>.15;});
  assert.deepEqual([...new Set(heroPaths().map(p=>p.replace(/\.(jpg|webp)$/,"")))],["/menu-photos/aurora/cap-720"],"only the selected dish gets upgraded");
  assert.deepEqual(await dialog.locator("video").evaluate(v=>[v.muted,v.playsInline]),[true,true]);
@@ -89,6 +90,7 @@ const server=createServer(async(req,res)=>{
  const oldVideo=await v.elementHandle();assert.ok(videoCount()>0);
  await dialog.getByRole("button",{name:"Próximo item",exact:true}).click();
  await waitForIndex(3);
+ await dialog.locator("#reelsHint").waitFor({state:"hidden"});
  assert.equal(await page.locator("video").count(),0);
  assert.equal(await oldVideo.evaluate(el=>el.paused&&!el.isConnected),true);
  await dialog.getByRole("button",{name:"Próximo item",exact:true}).click();
