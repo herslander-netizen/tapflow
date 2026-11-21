@@ -1,4 +1,5 @@
 import {applyTheme} from "./theme.mjs";
+import {demoPhoto} from "./public-menu-photos.mjs";
 const $=id=>document.getElementById(id);
 const path=/^\/cardapio\/([a-z0-9-]{1,64})\/([A-Za-z0-9_-]{1,64})\/?$/.exec(location.pathname);
 const [status,retry,catalog,items,search]=["menuStatus","retry","catalog","menuItems","menuSearch"].map($);
@@ -8,17 +9,65 @@ const element=(type,text)=>{const node=document.createElement(type);node.textCon
 const clearFilters=$("clearFilters");
 const expanded=new Set();
 let records=[],selected="",restricted=false;
+function picture(base,{large=false,loading="lazy",alt=""}={}){
+  const output=element("picture"),source=element("source"),image=element("img");
+  const size=large?720:192;
+  source.type="image/webp";
+  source.srcset=large?base+"-720.webp":base+"-96.webp 96w, "+base+"-192.webp 192w";
+  if(!large)source.sizes="78px";
+  image.width=size;image.height=size*2/3;image.alt=alt;
+  image.loading=loading;image.decoding="async";
+  output.append(source,image);
+  return {output,image,src:base+"-"+size+".jpg"};
+}
+function photoLink(base,name,index){
+  const link=element("a");
+  link.className="item-photo";
+  link.href=base+"-720.jpg";
+  link.setAttribute("aria-label","Ampliar foto ilustrativa de "+name);
+  const thumb=picture(base,{loading:index<2?"eager":"lazy"});
+  thumb.image.addEventListener("error",()=>{link.hidden=true;});
+  const hint=element("span","Ampliar");hint.setAttribute("aria-hidden","true");
+  link.append(thumb.output,hint);
+  thumb.image.src=thumb.src;
+  link.addEventListener("click",event=>{
+    if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+    const viewer=$("photoViewer");
+    if(typeof viewer.showModal!=="function")return;
+    event.preventDefault();
+    const caption=$("photoCaption"), content=$("photoContent");
+    caption.textContent=name;
+    const detail=picture(base,{large:true,loading:"eager",alt:"Foto ilustrativa de "+name});
+    detail.image.addEventListener("error",()=>{
+      if(content.contains(detail.output))content.replaceChildren(element("p","Foto indisponível no momento."));
+    });
+    content.replaceChildren(detail.output);
+    detail.image.src=detail.src;
+    viewer.addEventListener("close",()=>{
+      content.replaceChildren();
+      if(link.isConnected&&!link.hidden)link.focus();else search.focus();
+    },{once:true});
+    viewer.showModal();
+  });
+  return link;
+}
 function render(){
   const query=normalize(search.value).trim();
   const visible=records.filter(item=>(!selected||item.categoryId===selected)&&normalize([item.name,item.description,item.categoryName].join(" ")).includes(query));
-  items.replaceChildren(...visible.map(item=>{
+  items.replaceChildren(...visible.map((item,index)=>{
     const li=document.createElement("li");li.className="menu-item";
     if(item.categoryName){const category=element("p",item.categoryName);category.className="label";li.append(category);}
     const head=element("div");
     head.className="item-heading";
     head.append(element("h2",item.name),element("strong",price.format(item.priceCents/100)));
-    li.append(head);
-    if(item.description){const description=element("p",item.description);description.className="item-description";li.append(description);}
+    const body=element("div");body.className="item-body";
+    body.append(head);
+    if(item.description){const description=element("p",item.description);description.className="item-description";body.append(description);}
+    const base=demoPhoto(path?.[1],path?.[2],item.id);
+    if(base){
+      const row=element("div");row.className="item-row";
+      row.append(body,photoLink(base,item.name,index));li.append(row);
+    }else li.append(body);
     if(!item.available){const unavailable=element("p","Esgotado");unavailable.className="item-status";li.append(unavailable);}
     if(item.addons.length){
       const details=document.createElement("details"),list=document.createElement("ul");
@@ -90,4 +139,5 @@ clearFilters.addEventListener("click",()=>{
   search.focus();
   render();
 });
+$("closePhoto").addEventListener("click",()=>$("photoViewer").close());
 search.addEventListener("input",render);retry.addEventListener("click",()=>load({fromRetry:true}));load();
