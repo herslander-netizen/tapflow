@@ -68,7 +68,7 @@
       '<div class="reel-top"><div class="reel-restaurant"><span class="restaurant-circle">S.</span> Studio Sabor</div><span class="media-label">FOTO ILUSTRATIVA · DEMO</span></div>'+
       '<div class="reel-top-icons"><button type="button" data-action="help" aria-label="Como funciona a demonstração">?</button></div>'+
       '<div class="reel-content"><p class="reel-kicker">'+escapeHTML(item.label)+' · '+escapeHTML(item.category)+'</p>'+
-      '<h2 class="reel-title">'+escapeHTML(item.name)+'</h2><p class="reel-desc">'+escapeHTML(item.description)+'</p>'+
+      '<h1 class="reel-title">'+escapeHTML(item.name)+'</h1><p class="reel-desc">'+escapeHTML(item.description)+'</p>'+
       '<div class="reel-price"><strong>'+brl(item.price)+'</strong><span>por porção</span></div>'+
       '<button class="reel-cta" type="button" data-action="detail" data-id="'+item.id+'" '+(!item.available?"disabled":"")+'><span>'+(item.available?"Personalizar e pedir":"Esgotado neste demo")+'</span><i aria-hidden="true">↗</i></button>'+
       '</div></article></div>'+
@@ -169,7 +169,7 @@
     renderRight();
   }
   function openModal(title,body,footer=""){
-    const previous=document.activeElement;
+    const previous=state.modal?.previous||document.activeElement;
     state.modal={previous};
     drawer.innerHTML='<div class="scrim" data-action="backdrop"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialog-title"><header class="sheet-head"><h2 id="dialog-title">'+escapeHTML(title)+'</h2><button class="close-btn" type="button" data-action="close" aria-label="Fechar">×</button></header><div class="sheet-body">'+body+'</div>'+(footer?'<footer class="sheet-foot">'+footer+'</footer>':"")+'</section></div>';
     document.body.classList.add("modal-open");
@@ -221,9 +221,10 @@
   function reviewCheckout(){
     if(!state.cart.length)return;
     const sum=cartTotal(state.cart);
+    const checkoutLines=state.cart.map(line=>'<div class="cart-line"><div class="cart-line-info"><b>'+line.quantity+'× '+escapeHTML(line.name)+'</b><small>'+escapeHTML(line.addons.join(", ")||"Sem adicionais")+'</small></div><strong>'+brl(line.unitPrice*line.quantity)+'</strong></div>').join("");
     openModal("Revisar pedido",'<div class="demo-note">PEDIDO SIMULADO. Não enviaremos dados a restaurantes ou serviços de pagamento.</div>'+
       '<div class="order-id"><small>Local de demonstração</small><b>'+escapeHTML(tableLabel)+'</b></div>'+
-      '<div class="cart-lines">'+cartRows().replaceAll('data-action="qty"','data-action="noop"')+'</div>'+
+      '<div class="cart-lines">'+checkoutLines+'</div>'+
       '<div class="totals"><div class="total-row"><span>Subtotal ilustrativo</span><b>'+brl(sum)+'</b></div><div class="total-row"><span>Taxas</span><b>'+brl(0)+'</b></div><div class="total-row"><strong>Total</strong><strong>'+brl(sum)+'</strong></div></div>'+
       '<p class="collection-desc">Pagamento: não exigido na simulação. A confirmação será visível apenas nesta sessão.</p>',
       '<button class="btn btn-primary btn-block" type="button" data-action="submit-order">Confirmar pedido de teste →</button>');

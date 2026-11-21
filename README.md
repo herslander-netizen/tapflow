@@ -46,3 +46,10 @@ Leia `docs/PRD.md` e execute apenas o escopo permitido em `docs/PROMPT_CODEX_FAS
 ---
 
 **Proprietária:** ALVO Digital · **Status:** documentação inicial · **Sem vínculo com a KAIRÓS Produtora**
+
+## Demonstração interativa (branch de desenvolvimento)
+
+A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a partir da raiz (Node 20+) e abra `http://127.0.0.1:4173`.
+O comando `npm test` valida regras locais de preços, adicionais e estados; mais informações em [docs/PROTOTIPO_DEMO.md](docs/PROTOTIPO_DEMO.md).
+
+**Atenção:** fotos, pedidos, preços e cozinha são demonstrativos. Nenhuma integração real de pagamento, NFC, QR, banco ou restaurante foi ativada.
