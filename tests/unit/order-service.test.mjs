@@ -12,6 +12,12 @@ const fakeDb=({tenant=session.tenantId,available=true,price=3500}={})=>{
  const prepare=sql=>({bind(...args){return {
   sql,args,async first(){
    if(sql.startsWith("SELECT dt.id AS table_id"))return tenant===session.tenantId?{table_id:session.tableId}:null;
+   if(sql.startsWith("SELECT i.request_hash,i.order_id,o.total_cents,o.status,o.payment_status")){
+     const key=[args[0],args[1],args[2]].join("|");
+     const idem=state.idem.get(key),saved=idem&&state.orders.get(idem.order_id);
+     return saved?{request_hash:idem.request_hash,order_id:idem.order_id,total_cents:saved.total_cents,
+       status:saved.status,payment_status:saved.payment_status}:null;
+   }
    if(sql.startsWith("SELECT id,status,payment_status,total_cents FROM orders")){
      const row=state.orders.get(args[0]);return row?.tenant_id===args[1]&&row?.location_id===args[2]&&row?.table_id===args[3]&&row?.actor_session_hash===args[4]?row:null;
    }
@@ -33,7 +39,7 @@ const fakeDb=({tenant=session.tenantId,available=true,price=3500}={})=>{
   const current=state.idem.get(key);
   let made=0;
   if(!current){
-    if(tenant!==tenantId||!available||price!==order.args[9])throw Error("Guard conflict");
+    if(tenant!==tenantId||!available||price!==order.args[12])throw Error("Guard conflict");
     state.orders.set(orderId,{id:orderId,tenant_id:tenantId,location_id:order.args[2],
       table_id:order.args[3],actor_session_hash:order.args[4],status:"submitted",payment_status:"not_required",
       total_cents:order.args[5]});
@@ -87,6 +93,25 @@ test("cria um único pedido e evento por chave; replay não duplica",async()=>{
  assert.equal(state.lines.size,1);assert.equal(state.events.size,1);
  assert.ok(state.batches[0][0].sql.includes("availability='available'"));
  assert.ok(state.batches[0][0].sql.includes("price_cents=?"));
+});
+test("replay devolve snapshot mesmo após alteração no cardápio",async()=>{
+ const config={};
+ const {db,state}=fakeDb(config);
+ const api=createOrderApi({db,enabled:true,authorizeSession:async()=>session});
+ const first=await (await api(post())).json();
+ const original=state.idem.values().next().value;
+ assert.equal(first.total,8000);assert.ok(original?.request_hash);
+ // Simula item fora do ar no replay: consulta de cotação não precisa ocorrer.
+ db.prepare=(sql)=>{
+   if(sql.startsWith("SELECT dt.id AS table_id"))return {bind(){return{first:async()=>({table_id:session.tableId})}}};
+   if(sql.startsWith("SELECT i.request_hash,i.order_id,o.total_cents,o.status,o.payment_status"))return {bind(){return{first:async()=>({
+     request_hash:original.request_hash,order_id:first.id,total_cents:8000,status:"submitted",payment_status:"not_required"})}}};
+   if(sql.startsWith("SELECT m.id AS item_id"))throw Error("Replay não pode recalcular preço");
+   throw Error("Unexpected query");
+ };
+ const retry=await api(post());
+ assert.equal(retry.status,200);
+ assert.equal((await retry.json()).total,8000);
 });
 test("reutilizar chave com outro conteúdo retorna 409 sem novas linhas",async()=>{
  const {db,state}=fakeDb();

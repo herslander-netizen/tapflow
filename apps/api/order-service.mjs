@@ -103,6 +103,20 @@ const guardedSql=(ctx,quote,catalog)=>{
   }
   return {where:clauses.join(" AND "),bind};
 };
+async function repeatOrder(db,ctx,input,key){
+  const cart=normalizeCart(input,ctx);
+  const canonical=JSON.stringify({tenantId:ctx.tenantId,locationId:ctx.locationId,tableId:ctx.tableId,lines:cart.lines});
+  const hash=await sha(canonical);
+  const existing=await db.prepare("SELECT i.request_hash,i.order_id,o.total_cents,o.status,o.payment_status "+
+    "FROM order_idempotency i JOIN orders o ON o.id=i.order_id AND o.tenant_id=i.tenant_id "+
+    "WHERE i.tenant_id=? AND i.actor_session_hash=? AND i.idempotency_key=?")
+    .bind(ctx.tenantId,ctx.sessionHash,key).first();
+  if(!existing)return null;
+  if(existing.request_hash!==hash)return {status:409,body:{error:"Chave de idempotência usada para outro pedido"}};
+  return {status:200,body:{id:existing.order_id,status:existing.status,
+    paymentStatus:existing.payment_status,total:existing.total_cents,currency:"BRL",
+    persisted:true,replayed:true}};
+}
 async function submit(db,ctx,quote,catalog,key){
   const canonical=JSON.stringify({tenantId:ctx.tenantId,locationId:ctx.locationId,tableId:ctx.tableId,
     lines:quote.lines.map(l=>({itemId:l.itemId,quantity:l.quantity,addonIds:l.addonIds,notes:l.notes}))});
@@ -165,11 +179,16 @@ export function createOrderApi({db,authorizeSession,enabled=false}={}){
           total:row.total_cents,currency:"BRL"}):failure(404,"Pedido não encontrado");
       }
       const input=await boundedBody(request);
+      const key=request.headers.get("idempotency-key");
+      if(path==="/v1/orders"){
+        if(!key||!KEY.test(key))return failure(400,"Idempotency-Key inválida (8–128 caracteres)");
+        await verifyTable(db,ctx);
+        const old=await repeatOrder(db,ctx,input,key);
+        if(old)return json(old.status,old.body);
+      }
       const {quote,catalog}=await priceQuote(db,ctx,input);
       if(path==="/v1/quotes")return json(200,{total:quote.total,currency:"BRL",lines:quote.lines,
         paymentStatus:"not_required",quoteOnly:true});
-      const key=request.headers.get("idempotency-key");
-      if(!key||!KEY.test(key))return failure(400,"Idempotency-Key inválida (8–128 caracteres)");
       const res=await submit(db,ctx,quote,catalog,key);
       return json(res.status,res.body);
     }catch(err){
