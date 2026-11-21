@@ -20,7 +20,7 @@ A pesquisa cobre bem sistemas de restaurante, mas generaliza em excesso a catego
 7. Fotos de terceiros e vídeos de demonstração não equivalem a conteúdo licenciado do restaurante: identificar material ilustrativo e origem.
 
 ## Direção refinada de UX
-**Identidade-base:** Lime Noir. Grafite-verde #101410, superfícies #1E241F, lima #C8F45D, texto #F5F7F2, texto secundário #9BA79B. O tema ainda é uma proposta, não identidade aprovada em definitivo.
+**Identidade oficial v1 (PR #8):** logotipo lettering TapFlow sem símbolo, verde-floresta #024519, lima #B6E229, creme #FEFBF6, tinta #101A13, sage #E6F1E7 e verde profundo #003615. Sora para títulos/interface. Fonte: docs/IDENTIDADE_VISUAL_TAPFLOW.md na branch design/tapflow-identidade-visual. A aplicação deste PR reutiliza o SVG derivado do wordmark, sem redesenhá-lo.
 **Estrutura:** topo reduzido com restaurante e mesa; feed vertical com um item por quadro, preço/CTA sempre legíveis; lista com busca e categorias; detalhe em sheet com adicionais e alergênicos; carrinho sem taxas-surpresa; pedido/status separado de pagamento.
 **Regra de vídeo:** poster imediato; somente 1 mídia com reprodução ativa; áudio inicial mudo quando aplicável; não baixar todos os vídeos; parar fora do viewport; oferecer navegação sem vídeo.
 **Operação:** ênfase em novo pedido, preparo, pronto e entregue, com separação entre status operacional e financeiro.

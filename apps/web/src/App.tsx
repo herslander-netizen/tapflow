@@ -124,7 +124,7 @@ export function App() {
   return (
     <div className="workspace">
       <aside className="editorial" aria-label="Informações da demonstração">
-        <div className="wordmark">tapflow<span className="wordmark-dot">.</span></div>
+        <div className="wordmark"><img src="/tapflow-wordmark.svg" alt="TapFlow" /></div>
         <div className="editorial-copy">
           <p className="overline">ALVO DIGITAL / EXPERIÊNCIA GASTRONÔMICA</p>
           <h1>O cardápio que dá vontade de pedir.</h1>
