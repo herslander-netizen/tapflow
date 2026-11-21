@@ -62,4 +62,12 @@ Linguagem direta, leve e gastronômica, sem exagerar capacidades de pedidos e pa
 - `tests/unit/brand.test.mjs`: testes dos tokens e estrutura de logo.
 - **Kit completo com o PNG original, PNG transparente, lettering claro, paleta e painel de aplicações** disponível em `Biblioteca/TapFlow/Identidade Visual`.
 
-**Não houve deploy da identidade nesta branch.** A interface existente mantém o tema anterior até revisão/merge e validação UX, para não interromper o piloto.
+**A identidade já está aplicada no HTML/CSS desta branch de design**: lettering aprovado no topo, Sora, cartão de cardápio e sheets creme, ambiente Reels em verde-floresta e CTA lima. A aplicação ainda **não foi implantada**; a prévia pública mantém o tema anterior até revisão, QA e publicação manual.
+
+### Revisão visual pendente
+
+- Verificar visualmente em Chrome Android 360px, 390px, 430px e desktop 1280px (incluindo teclado virtual, safe areas e vídeo reduzido).
+- Verificar contraste WCAG 2.2 AA e foco visível em catálogo, carrinho, modais e tabbar.
+- Confirmar que nenhum símbolo retorna ao lettering e que o SVG permanece igual ao traçado registrado.
+- Não ativar pedidos reais, avisos WhatsApp ou pagamentos nesta etapa.
+

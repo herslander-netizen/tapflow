@@ -81,6 +81,9 @@ button,input,textarea{font-family:inherit}
 .collection .search-field input{color:var(--tapflow-ink)}
 .collection .search-field input::placeholder{color:#647568}
 .collection .chips button{background:var(--tapflow-sage);color:var(--tapflow-forest);border:1px solid #D0E0D0;min-height:44px}
+.collection .accent,.sheet .accent{color:var(--tapflow-forest)}
+.collection .btn-ghost{color:var(--tapflow-forest);border-color:var(--tapflow-forest)}
+.collection .btn-secondary{color:var(--tapflow-forest);background:var(--tapflow-sage);border-color:#CBDDCE}
 .collection .chips button.active{background:var(--tapflow-lime);border-color:var(--tapflow-lime);color:var(--tapflow-forest)}
 .food-card{background:#FFF;color:var(--tapflow-ink);border:1px solid #DFE9DF;border-radius:24px;box-shadow:0 6px 24px rgba(2,69,25,.055)}
 .food-card h3,.food-card .row strong{color:var(--tapflow-forest)}
