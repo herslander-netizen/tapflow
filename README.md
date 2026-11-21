@@ -48,3 +48,25 @@ Leia `docs/PRD.md` e execute apenas o escopo permitido em `docs/PROMPT_CODEX_FAS
 ---
 
 **Proprietária:** ALVO Digital · **Status:** documentação inicial · **Sem vínculo com a KAIRÓS Produtora**
+
+## Demonstração interativa (branch de desenvolvimento)
+
+A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a partir da raiz (Node 20+) e abra `http://127.0.0.1:4173`.
+O comando `npm test` valida regras locais de preços, adicionais e estados; mais informações em [docs/PROTOTIPO_DEMO.md](docs/PROTOTIPO_DEMO.md).
+
+**Atenção:** fotos, pedidos, preços e cozinha são demonstrativos. Nenhuma integração real de pagamento, NFC, QR, banco ou restaurante foi ativada.
+
+
+### Mídia de demonstração
+
+O Burger da Brasa possui um clipe WebM com licença CC BY 4.0 e atribuição. Reproduz mudo apenas quando permitido e tem foto de fallback. Leia [Mídias de demonstração](docs/MIDIAS_DEMO.md). Ainda não há infraestrutura de vídeo do TapFlow.
+
+
+### Reproduzir o Worker demonstrativo
+
+Execute `npm run build:preview` para gerar `.build/tapflow-preview-worker.mjs` a partir de `apps/web` sem acessar a rede, sem segredos e **sem publicar**. O preview na Cloudflare usa binding D1 `DB`, na conta exclusiva TapFlow; a configuração está no PR #5. Essa embalagem do frontend é temporária e será substituída por Workers Static Assets.
+
+
+## Infraestrutura Free e agentes (integração em revisão)
+
+Esta branch combina o protótipo Reels do PR #4 com os arquivos da infraestrutura do PR #5. Consulte [integração beta](docs/INTEGRACAO_BETA.md) e [inventário gratuito](infra/free-stack/README.md). O Worker de prévia em `apps/api/preview-worker.mjs` está fechado para pedidos reais; pagamentos e WhatsApp não estão habilitados. Nenhum deploy é feito automaticamente.

@@ -1,0 +1,37 @@
+name: TapFlow — validação do protótipo
+on:
+  pull_request:
+    branches: [main, 'feat/tapflow-integrado-preview-api']
+    paths:
+      - "apps/web/**"
+      - "brand/**"
+      - "docs/IDENTIDADE_VISUAL_TAPFLOW.md"
+      - "apps/api/**"
+      - "packages/contracts/**"
+      - "tests/unit/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/validate-demo.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verificar sintaxe da interface
+        run: |
+          node --check apps/api/order-service.mjs
+          node --check apps/web/app.js
+          node --check apps/web/domain.mjs
+          node --check apps/web/demo-data.js
+          node --check apps/web/media.mjs
+          node --check scripts/serve.mjs
+          node --check scripts/build-preview-worker.mjs
+      - name: Testes unitários (sem dependências e sem deploy)
+        run: npm test
