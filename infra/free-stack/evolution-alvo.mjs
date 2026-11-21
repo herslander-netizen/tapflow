@@ -1,6 +1,6 @@
 // Evolution Alvo — integração isolada do TapFlow. Nenhum envio automático.
 const apiPaths=Object.freeze({connection:"/v1/connection",text:"/v1/messages/text"});
-const PHONE=/^[1-9][0-9]{9,14}$/;
+const PHONE=/^55[1-9][0-9]{9,10}$/;
 const ID=/^[A-Za-z0-9_.:-]{8,128}$/;
 const TENANT=/^[a-zA-Z0-9_-]{1,64}$/;
 function configuration(env,forSending=false){

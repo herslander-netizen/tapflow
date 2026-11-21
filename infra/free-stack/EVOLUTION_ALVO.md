@@ -18,7 +18,7 @@ A biblioteca infra/free-stack/evolution-alvo.mjs:
 - Exige exclusivamente projeto tapflow, HTTPS, token server-side e EVOLUTION_ENABLED=true.
 - Envio é bloqueado por padrão; exige EVOLUTION_SEND_ENABLED=true **e** confirmação humana, opt-in verificado, evento persistido verificado, perfil autorizado e tenant compatível.
 - Faz hash estável de tenant + evento para Idempotency-Key, evitando colisões entre restaurantes.
-- Não aceita grupos, não cria pedidos, não confirma pagamentos e não dispara mensagens a partir de saída de um agente.
+- No piloto brasileiro aceita apenas números com DDI 55 e DDD válidos em formato numérico (12–13 dígitos); não aceita grupos, não cria pedidos, não confirma pagamentos e não dispara mensagens a partir de saída de um agente.
 - Não está exposta como endpoint público e não foi incorporada ao Worker ativo; sem sessão/autorização confiável do estabelecimento e consentimento persistido, não publicar rota de envio.
 - Os perfis, eventos e opt-in devem futuramente ser derivados do banco e de sessão autenticada no backend, e nunca de JSON enviado pelo cliente. Os testes unitários injetam dados simulados e não garantem segurança de uma API pública.
 
