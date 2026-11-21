@@ -20,69 +20,77 @@ function picture(base,{large=false,loading="lazy",alt=""}={}){
   output.append(source,image);
   return {output,image,src:base+"-"+size+".jpg"};
 }
-function videoOption(base,name,photo){
+function videoOption(base,name,photo,layer){
   const section=element("div"), button=element("button","Ver em vídeo"), status=element("p");
   section.className="demo-video";
-  button.type="button";
   status.setAttribute("role","status");
+  button.type="button";
   section.append(button,status);
-  let video;
+  let player, timer;
   function release(){
-    if(!video)return;
-    const target=video;
-    video=undefined;
+    clearTimeout(timer);
+    if(!player)return;
+    const target=player;
+    player=null;
     target.pause();
     target.removeAttribute("src");
     target.load();
     target.remove();
+    photo.hidden=false;
+  }
+  function start(){
+    if(player)return;
+    const video=element("video");
+    video.playsInline=true;
+    video.muted=true;
+    video.defaultMuted=true;
+    video.preload="metadata";
+    video.className="reels-video";
+    video.hidden=true;
+    video.setAttribute("aria-label","Animação demonstrativa de "+name);
+    const formats=[["webm","video/webm"],["mp4","video/mp4"]].filter(([,type])=>video.canPlayType(type));
+    player=video;
+    layer.append(video);
+    button.textContent="Voltar à foto";
+    status.textContent="Carregando animação…";
+    function reset(message){
+      if(player!==video)return;
+      release();
+      button.textContent="Ver em vídeo";
+      status.textContent=message;
+    }
+    function unavailable(){reset("O vídeo não carregou. A foto e a descrição continuam disponíveis.");}
+    function nextFormat(){
+      if(player!==video)return;
+      clearTimeout(timer);
+      const format=formats.shift();
+      if(!format){unavailable();return;}
+      video.hidden=true;photo.hidden=false;
+      video.src=base+"."+format[0];
+      timer=setTimeout(unavailable,8000);
+      video.play().catch(error=>{
+        if(error.name==="NotAllowedError")reset("Toque em Ver em vídeo para assistir.");
+        // Source failures reach the error listener, which tries the next format.
+      });
+    }
+    video.addEventListener("error",nextFormat);
+    video.addEventListener("playing",()=>{
+      if(player!==video)return;
+      clearTimeout(timer);
+      photo.hidden=true;
+      video.hidden=false;
+      status.textContent="Animação demonstrativa · sem áudio";
+    });
+    video.addEventListener("ended",()=>reset("Animação demonstrativa · sem áudio"));
+    nextFormat();
   }
   button.addEventListener("click",()=>{
-    if(video){
-      release();
-      photo.hidden=false;
-      status.textContent="";
-      button.textContent="Ver em vídeo";
-      return;
-    }
-    const player=element("video");
-    player.controls=true;
-    player.playsInline=true;
-    player.muted=true;
-    player.preload="metadata";
-    player.setAttribute("aria-label","Animação demonstrativa de "+name);
-    const formats=[["webm","video/webm"],["mp4","video/mp4"]];
-    const supported=formats.filter(([,type])=>player.canPlayType(type));
-    button.disabled=true;
-    status.textContent="Carregando animação…";
-    video=player;
-    function unavailable(){
-      release();
-      photo.hidden=false;
-      button.textContent="Ver em vídeo";
-      status.textContent="O vídeo não carregou. A foto e a descrição continuam disponíveis.";
-      button.disabled=false;
-      button.focus();
-    }
-    function nextFormat(){
-      if(video!==player)return;
-      const format=supported.shift();
-      if(!format){unavailable();return;}
-      player.src=base+"."+format[0];
-    }
-    player.addEventListener("error",nextFormat);
-    player.addEventListener("loadedmetadata",()=>{
-      if(video!==player)return;
-      photo.hidden=true;
-      button.disabled=false;
-      button.textContent="Voltar à foto";
-      status.textContent="Animação demonstrativa · sem áudio";
-      player.focus();
-    });
-    player.tabIndex=0;
-    section.append(player);
-    nextFormat();
+    if(!player){start();return;}
+    release();
+    status.textContent="";
+    button.textContent="Ver em vídeo";
   });
-  return {section,release};
+  return {section,release,start};
 }
 const viewer=$("reelsViewer"), track=$("reelsTrack"), position=$("reelsPosition");
 const closeReels=$("closeReels"), previous=$("previousReel"), next=$("nextReel");
@@ -98,16 +106,26 @@ function photoTrigger(item,base,index){
   button.setAttribute("aria-label","Ver no Reels: "+item.name);
   if(base){
     const thumb=picture(base,{loading:index<2?"eager":"lazy"});
-    thumb.image.addEventListener("error",()=>thumb.output.remove());
+    thumb.image.addEventListener("error",()=>{
+      thumb.output.remove();
+      const hint=element("span","Reels");
+      hint.className="reels-thumb-fallback";
+      button.prepend(hint);
+    });
     button.append(thumb.output);
     thumb.image.src=thumb.src;
   }
-  button.append(element("span","Ver no Reels"));
+  if(demoVideo(path?.[1],path?.[2],item.id)){
+    const badge=element("span","▶");
+    badge.className="reels-play-badge";badge.setAttribute("aria-hidden","true");button.append(badge);
+  }
+  if(!base){const hint=element("span","Reels");hint.className="reels-thumb-fallback";button.append(hint);}
   button.addEventListener("click",()=>openReels(item,button));
   return button;
 }
 function makeSlide(item,index,total){
-  const slide=element("article"), detail=element("div"), photo=element("div");
+  const slide=element("article"), hero=element("div"), detail=element("div"), photo=element("div"), layer=element("div");
+  hero.className="reels-hero";layer.className="reels-layer";
   slide.className="reels-frame";
   slide.setAttribute("aria-label",String(index+1)+" de "+total+": "+item.name);
   detail.className="reels-details";
@@ -115,24 +133,29 @@ function makeSlide(item,index,total){
   detail.append(element("h2",item.name),element("strong",price.format(item.priceCents/100)));
   if(item.description)detail.append(element("p",item.description));
   if(!item.available)detail.append(element("p","Esgotado"));
+  const media=element("div");
+  detail.append(media);
+  detail.append(element("p","Para pedir, fale com a equipe."));
+  layer.append(photo);
+  hero.append(layer,detail);
+  slide.append(hero);
   if(item.addons.length){
     const extras=element("details"), list=element("ul");
     extras.append(element("summary","Adicionais"));
     for(const addon of item.addons)list.append(element("li",addon.name+" · "+price.format(addon.priceCents/100)));
-    extras.append(list);detail.append(extras);
+    extras.append(list);extras.className="reels-extras";detail.append(extras);
   }
-  detail.append(element("p","Para pedir, fale com a equipe."));
   photo.className="reels-photo";
   const base=demoPhoto(path?.[1],path?.[2],item.id);
   if(base){
     const image=picture(base,{large:true,loading:"lazy",alt:"Foto ilustrativa de "+item.name});
     image.image.addEventListener("error",()=>photo.replaceChildren(element("p","Foto indisponível")));
-    photo.append(image.output,element("p","Foto ilustrativa da demonstração."));
+    const caption=element("p","Foto ilustrativa da demonstração.");
+    caption.className="reels-credit";detail.append(caption);
+    photo.append(image.output);
     image.image.src=image.src;
   }else photo.append(element("p","Foto indisponível"));
-  const media=element("div");
-  slide.append(photo,detail,media);
-  return {slide,photo,media,item};
+  return {slide,photo,media,item,layer};
 }
 function releaseMotion(){
   motion?.release();
@@ -148,9 +171,12 @@ function activate(index){
   position.textContent=(index+1)+" de "+slides.length;
   previous.setAttribute("aria-disabled",String(index===0));
   next.setAttribute("aria-disabled",String(index===slides.length-1));
-  const {item,photo,media}=slides[index];
+  const {item,photo,media,layer}=slides[index];
   const videoBase=demoVideo(path?.[1],path?.[2],item.id);
-  if(videoBase){motion=videoOption(videoBase,item.name,photo);media.append(motion.section);}
+  if(videoBase){
+    motion=videoOption(videoBase,item.name,photo,layer);media.append(motion.section);
+    if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches)motion.start();
+  }
   // Releasing a player above the active item can change its measured position.
   const adjustment=slides[index].slide.getBoundingClientRect().top-previousTop;
   if(adjustment)track.scrollTop+=adjustment;
@@ -256,13 +282,17 @@ function render(){
     if(item.categoryName){const category=element("p",item.categoryName);category.className="label";li.append(category);}
     const head=element("div");
     head.className="item-heading";
-    head.append(element("h2",item.name),element("strong",price.format(item.priceCents/100)));
+    const title=element("h2"), open=element("button",item.name);
+    open.type="button";open.className="item-title-trigger";
+    open.addEventListener("click",()=>openReels(item,open));
+    title.append(open);
+    head.append(title,element("strong",price.format(item.priceCents/100)));
     const body=element("div");body.className="item-body";
     body.append(head);
     if(item.description){const description=element("p",item.description);description.className="item-description";body.append(description);}
     const base=demoPhoto(path?.[1],path?.[2],item.id);
     const row=element("div");row.className="item-row";
-    row.append(body,photoTrigger(item,base,index));li.append(row);
+    row.append(photoTrigger(item,base,index),body);li.append(row);
     if(!item.available){const unavailable=element("p","Esgotado");unavailable.className="item-status";li.append(unavailable);}
     if(item.addons.length){
       const details=document.createElement("details"),list=document.createElement("ul");

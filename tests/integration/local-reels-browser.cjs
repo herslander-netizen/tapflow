@@ -42,6 +42,30 @@ const server=createServer(async(req,res)=>{
  await page.goto(origin+path);
  await page.getByRole("heading",{name:"Café Aurora",exact:true}).waitFor();
  assert.equal(videoCount(),0);
+ await page.emulateMedia({reducedMotion:"no-preference"});
+ await page.locator(".item-title-trigger").filter({hasText:items[1].name}).click();
+ await dialog.waitFor();
+ await page.waitForFunction(()=>{const v=document.querySelector("video");return v&&!v.paused&&v.currentTime>.15;});
+ assert.deepEqual(await dialog.locator("video").evaluate(v=>[v.muted,v.playsInline]),[true,true]);
+ const box=await dialog.boundingBox(), viewport=page.viewportSize();
+ assert.ok(box&&box.width>=viewport.width-2&&box.height>=viewport.height-2,
+  "the active Reel fills the mobile viewport");
+ const contrast=await dialog.locator(".reels-details").nth(1).evaluate(el=>{
+   const numbers=s=>s.match(/[0-9.]+/g).map(Number), css=getComputedStyle(el);
+   const fg=numbers(css.color), rgba=numbers(css.backgroundColor);
+   const composite=rgba.slice(0,3).map(c=>c*(rgba[3]??1)+255*(1-(rgba[3]??1)));
+   const luminance=rgb=>rgb.reduce((sum,c,i)=>{
+     const v=c/255;return sum+[.2126,.7152,.0722][i]*(v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+   },0);
+   const a=luminance(fg),b=luminance(composite);
+   return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+ });
+ assert.ok(contrast>=4.5,"O texto precisa manter contraste AA até sobre mídia branca.");
+ assert.equal(new URL(page.url()).pathname,path);
+ await page.keyboard.press("Escape");await dialog.waitFor({state:"hidden"});
+ assert.equal(await page.locator("video").count(),0);
+ await page.emulateMedia({reducedMotion:"reduce"});
+ const beforeReduced=videoCount();
  await page.getByRole("button",{name:"Cafés",exact:true}).click();
  await search.fill("selecao");
  await page.getByText("5 itens",{exact:true}).waitFor();
@@ -50,12 +74,12 @@ const server=createServer(async(req,res)=>{
  await opener.press("Enter");
  await dialog.waitFor();await waitForIndex(2);
  assert.equal(await page.locator("video").count(),0);
- assert.equal(videoCount(),0);
+ assert.equal(videoCount(),beforeReduced);
  assert.equal(new URL(page.url()).pathname,path);
  await dialog.getByRole("button",{name:"Ver em vídeo",exact:true}).click();
  await page.waitForFunction(()=>document.querySelector("video")?.readyState>=1);
  const v=dialog.locator("video");
- assert.deepEqual(await v.evaluate(e=>[e.controls,e.playsInline,e.muted,e.paused,e.autoplay]),[true,true,true,true,false]);
+ assert.deepEqual(await v.evaluate(e=>[e.playsInline,e.muted]),[true,true]);
  const oldVideo=await v.elementHandle();assert.ok(videoCount()>0);
  await dialog.getByRole("button",{name:"Próximo item",exact:true}).click();
  await waitForIndex(3);
@@ -98,6 +122,6 @@ const server=createServer(async(req,res)=>{
   assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,"overflow "+width);
   await p.keyboard.press("Escape");await dialog.waitFor({state:"hidden"});
  }
- console.log("PASS: filtered opener, next twice, Back/Forward, focus/filter/scroll, touch swipe, media lazy-load/cleanup/errors, long text/reduced motion, 360/390/430/1280, read-only");
+ console.log("PASS: first-click immersive playback, reduced-motion override, filtered opener, next twice, Back/Forward, focus/filter/scroll, touch swipe, media lazy-load/cleanup/errors, long text/reduced motion, 360/390/430/1280, read-only");
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});
