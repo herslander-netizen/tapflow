@@ -10,3 +10,9 @@ export function demoPhoto(slug, locationId, itemId) {
   if (slug !== "cafe-aurora-demo" || locationId !== "vitrine-demo" || !Object.hasOwn(photos, itemId)) return null;
   return "/menu-photos/aurora/" + photos[itemId];
 }
+
+export function demoVideo(slug, locationId, itemId) {
+  if (itemId !== "aurora-cap") return null;
+  const base = demoPhoto(slug, locationId, itemId);
+  return base ? base + "-motion" : null;
+}

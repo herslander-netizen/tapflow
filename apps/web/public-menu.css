@@ -121,3 +121,9 @@ footer { margin-top: 18px; padding-block: 12px; font-size: .82rem; }
   display: block; padding-block: 3px 1px; text-align: center;
   color: var(--muted-on-surface, var(--text)); font-size: .72rem; text-decoration: underline;
 }
+.demo-video { margin-block-start: 12px; }
+.demo-video p { color: var(--muted); margin: 6px 0; }
+.demo-video video {
+  display: block; inline-size: min(100%, 320px); max-block-size: 48dvh;
+  margin: 8px auto 0; background: #000; border-radius: 10px;
+}

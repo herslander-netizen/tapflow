@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
-import {demoPhoto} from "../../apps/web/public-menu-photos.mjs";
+import {demoPhoto,demoVideo} from "../../apps/web/public-menu-photos.mjs";
 
 test("fotos demonstrativas não cruzam vitrines, lojas ou IDs",()=>{
   const resolve=id=>demoPhoto("cafe-aurora-demo","vitrine-demo",id);
@@ -21,4 +21,19 @@ test("variantes geradas cabem no limite de transferência e têm o formato corre
       else assert.equal(file.readUInt16BE(0),0xffd8);
     }
   }
+});
+
+test("animação demonstrativa só pertence ao Cappuccino da vitrine fictícia", async()=>{
+  const demo=["cafe-aurora-demo","vitrine-demo","aurora-cap"];
+  const base=demoVideo(...demo);
+  assert.equal(base,"/menu-photos/aurora/cap-motion");
+  assert.equal(demoVideo("outra-loja",demo[1],demo[2]),null);
+  assert.equal(demoVideo(demo[0],"outra-unidade",demo[2]),null);
+  assert.equal(demoVideo(demo[0],demo[1],"aurora-coado"),null);
+  const webm=await readFile(new URL("../../apps/web"+base+".webm",import.meta.url));
+  const mp4=await readFile(new URL("../../apps/web"+base+".mp4",import.meta.url));
+  assert.ok(webm.length>100&&webm.length<=50_000);
+  assert.ok(mp4.length>100&&mp4.length<=60_000);
+  assert.equal(webm.readUInt32BE(0),0x1a45dfa3);
+  assert.equal(mp4.subarray(4,8).toString(),"ftyp");
 });

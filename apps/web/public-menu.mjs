@@ -1,5 +1,5 @@
 import {applyTheme} from "./theme.mjs";
-import {demoPhoto} from "./public-menu-photos.mjs";
+import {demoPhoto,demoVideo} from "./public-menu-photos.mjs";
 const $=id=>document.getElementById(id);
 const path=/^\/cardapio\/([a-z0-9-]{1,64})\/([A-Za-z0-9_-]{1,64})\/?$/.exec(location.pathname);
 const [status,retry,catalog,items,search]=["menuStatus","retry","catalog","menuItems","menuSearch"].map($);
@@ -20,14 +20,78 @@ function picture(base,{large=false,loading="lazy",alt=""}={}){
   output.append(source,image);
   return {output,image,src:base+"-"+size+".jpg"};
 }
-function photoLink(base,name,index){
+function videoOption(base,name,photo){
+  const section=element("div"), button=element("button","Ver em vídeo"), status=element("p");
+  section.className="demo-video";
+  button.type="button";
+  status.setAttribute("role","status");
+  section.append(button,status);
+  let video;
+  function release(){
+    if(!video)return;
+    const target=video;
+    video=undefined;
+    target.pause();
+    target.removeAttribute("src");
+    target.load();
+    target.remove();
+  }
+  button.addEventListener("click",()=>{
+    if(video){
+      release();
+      photo.hidden=false;
+      status.textContent="";
+      button.textContent="Ver em vídeo";
+      return;
+    }
+    const player=element("video");
+    player.controls=true;
+    player.playsInline=true;
+    player.muted=true;
+    player.preload="metadata";
+    player.setAttribute("aria-label","Animação demonstrativa de "+name);
+    const formats=[["webm","video/webm"],["mp4","video/mp4"]];
+    const supported=formats.filter(([,type])=>player.canPlayType(type));
+    button.disabled=true;
+    status.textContent="Carregando animação…";
+    video=player;
+    function unavailable(){
+      release();
+      photo.hidden=false;
+      button.textContent="Ver em vídeo";
+      status.textContent="O vídeo não carregou. A foto e a descrição continuam disponíveis.";
+      button.disabled=false;
+      button.focus();
+    }
+    function nextFormat(){
+      if(video!==player)return;
+      const format=supported.shift();
+      if(!format){unavailable();return;}
+      player.src=base+"."+format[0];
+    }
+    player.addEventListener("error",nextFormat);
+    player.addEventListener("loadedmetadata",()=>{
+      if(video!==player)return;
+      photo.hidden=true;
+      button.disabled=false;
+      button.textContent="Voltar à foto";
+      status.textContent="Animação demonstrativa · sem áudio";
+      player.focus();
+    });
+    player.tabIndex=0;
+    section.append(player);
+    nextFormat();
+  });
+  return {section,release};
+}
+function photoLink(base,name,index,videoBase){
   const link=element("a");
   link.className="item-photo";
   link.href=base+"-720.jpg";
-  link.setAttribute("aria-label","Ampliar foto ilustrativa de "+name);
+  link.setAttribute("aria-label",videoBase?"Foto e vídeo: "+name:"Ampliar foto ilustrativa de "+name);
   const thumb=picture(base,{loading:index<2?"eager":"lazy"});
   thumb.image.addEventListener("error",()=>{link.hidden=true;});
-  const hint=element("span","Ampliar");hint.setAttribute("aria-hidden","true");
+  const hint=element("span",videoBase?"Foto e vídeo":"Ampliar");hint.setAttribute("aria-hidden","true");
   link.append(thumb.output,hint);
   thumb.image.src=thumb.src;
   link.addEventListener("click",event=>{
@@ -39,11 +103,15 @@ function photoLink(base,name,index){
     caption.textContent=name;
     const detail=picture(base,{large:true,loading:"eager",alt:"Foto ilustrativa de "+name});
     detail.image.addEventListener("error",()=>{
-      if(content.contains(detail.output))content.replaceChildren(element("p","Foto indisponível no momento."));
+      if(content.contains(detail.output))detail.output.replaceWith(element("p","Foto indisponível no momento."));
     });
-    content.replaceChildren(detail.output);
+    const photo=element("div");
+    photo.append(detail.output);
+    const motion=videoBase?videoOption(videoBase,name,photo):null;
+    content.replaceChildren(photo,...(motion?[motion.section]:[]));
     detail.image.src=detail.src;
     viewer.addEventListener("close",()=>{
+      motion?.release();
       content.replaceChildren();
       if(link.isConnected&&!link.hidden)link.focus();else search.focus();
     },{once:true});
@@ -66,7 +134,7 @@ function render(){
     const base=demoPhoto(path?.[1],path?.[2],item.id);
     if(base){
       const row=element("div");row.className="item-row";
-      row.append(body,photoLink(base,item.name,index));li.append(row);
+      row.append(body,photoLink(base,item.name,index,demoVideo(path?.[1],path?.[2],item.id)));li.append(row);
     }else li.append(body);
     if(!item.available){const unavailable=element("p","Esgotado");unavailable.className="item-status";li.append(unavailable);}
     if(item.addons.length){
@@ -140,4 +208,5 @@ clearFilters.addEventListener("click",()=>{
   render();
 });
 $("closePhoto").addEventListener("click",()=>$("photoViewer").close());
+window.addEventListener("pagehide",()=>{if($("photoViewer").open)$("photoViewer").close();});
 search.addEventListener("input",render);retry.addEventListener("click",()=>load({fromRetry:true}));load();
