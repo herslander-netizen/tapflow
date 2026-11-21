@@ -1,0 +1,30 @@
+
+/* Complemento incremental ao protótipo Lime Noir existente */
+.reel-image{z-index:0;background:#32402c}
+.reel::before{z-index:1;pointer-events:none}
+.reel-placeholder{z-index:0}
+.reel-top,.reel-content{z-index:2}
+.reel-pager,.feed-switch{z-index:4}
+.reel-image.image-failed,.food-card-media.image-failed,.detail-image.image-failed,.cart-thumb.image-failed{opacity:0}
+.favorite-inline{background:transparent;color:#c8f45d;border:0;display:inline-flex;gap:6px;padding:9px 0 0;font-size:11px;font-weight:800}
+.favorite-inline:hover{text-decoration:underline}
+.collection .food-grid{margin-top:14px}
+.collection .btn-block{margin-top:12px}
+.collection .side-panel p{margin-top:12px}
+.detail-image{margin-top:4px;display:block}
+.option-row{cursor:pointer}
+.option-row:has(input:disabled){opacity:.55;cursor:not-allowed}
+.sheet{overscroll-behavior:contain}
+.modal-open{overflow:hidden}
+.sheet .input{resize:vertical;min-height:78px}
+.reel-title{overflow-wrap:anywhere}
+@media(max-width:740px){
+ .reel-content{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+ .reel{min-height:0}
+ .feed-controls{right:12px;bottom:190px}
+ .reel-content{padding-right:58px}
+ .reel-cta{width:calc(100% + 35px)}
+ .sheet .cart-lines{max-height:none}
+ .collection .side-panel{margin-top:20px}
+ .bottom-nav .bottom-link:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+}
