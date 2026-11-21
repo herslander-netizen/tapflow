@@ -44,7 +44,13 @@ const ADMISSION_TTL_MS=5*60*1000;
 const ISSUE_WINDOW_MS=60*1000;
 const MAX_RECENT_PER_TABLE=6;
 const MAX_ACTIVE_PER_TABLE=3;
-const ISSUE_SQL=`INSERT INTO order_admissions
+const CURRENT_MEMBERSHIP = `AND EXISTS (
+      SELECT 1 FROM order_staff_memberships s
+      WHERE s.issuer=? AND s.subject=? AND s.staff_id=?
+        AND s.tenant_id=d.tenant_id AND s.location_id=d.location_id
+        AND s.status='active' AND s.role IN ('owner','manager','attendant')
+    )`;
+const issueSql=requireMembership=>`INSERT INTO order_admissions
   (admission_hash,tenant_id,location_id,table_id,issued_at_ms,expires_at_ms)
   SELECT ?,d.tenant_id,d.location_id,d.id,?,?
   FROM dining_tables d
@@ -52,6 +58,7 @@ const ISSUE_SQL=`INSERT INTO order_admissions
   JOIN tenants t ON t.id=d.tenant_id
   WHERE d.id=? AND d.tenant_id=? AND d.location_id=?
     AND d.is_active=1 AND l.status='active' AND t.status='active'
+    ${requireMembership ? CURRENT_MEMBERSHIP : ""}
     AND (SELECT COUNT(*) FROM order_admissions a
          WHERE a.tenant_id=d.tenant_id AND a.location_id=d.location_id AND a.table_id=d.id
            AND a.issued_at_ms>?)<?
@@ -64,10 +71,11 @@ const ISSUE_SQL=`INSERT INTO order_admissions
  * Comando interno. authorizeStaff(ctx, capability) precisa autenticar o operador
  * usando uma sessão confiável e conferir a permissão e associação ATUAIS na
  * unidade. Nunca copie identidade, permissão ou escopo de headers/JSON do cliente.
- * Sucesso do adaptador: { staffId, tenantId, locationId, permission }.
+ * Sucesso do adaptador: { staffId, tenantId, locationId, permission, membershipProof }.
+ * requireCurrentStaffMembership=false é exclusivo de fixtures/invocadores internos já autorizados.
  * O contexto opaco não é enviado ao banco; tableId é só seletor no escopo verificado.
  */
-export function createOrderAdmissionIssuer({db,authorizeStaff,now=Date.now}={}){
+export function createOrderAdmissionIssuer({db,authorizeStaff,now=Date.now,requireCurrentStaffMembership=true}={}){
   return async function issueOrderAdmission(staffContext,tableId){
     if(typeof tableId!=="string" || !ID.test(tableId) || typeof authorizeStaff!=="function") return null;
     const permission="issue_table_admission";
@@ -75,15 +83,20 @@ export function createOrderAdmissionIssuer({db,authorizeStaff,now=Date.now}={}){
     if(staff?.permission!==permission || ![staff.staffId,staff.tenantId,staff.locationId].every(
       id=>typeof id==="string" && ID.test(id)
     )) return null;
-    const {tenantId,locationId}=staff;
+    const {tenantId,locationId,membershipProof}=staff;
+    const mustRecheck=requireCurrentStaffMembership!==false;
+    if(mustRecheck && (!membershipProof || membershipProof.tableId!==tableId ||
+      typeof membershipProof.issuer!=="string" || !membershipProof.issuer ||
+      typeof membershipProof.subject!=="string" || !membershipProof.subject)) return null;
     const timestamp=now();
     if(!Number.isSafeInteger(timestamp) || timestamp<0 || timestamp>Number.MAX_SAFE_INTEGER-ADMISSION_TTL_MS) return null;
     if(typeof db?.prepare!=="function") throw new Error("Banco de admissões indisponível");
     const code=createToken(), admissionHash=await hash(code);
     const expiresAtMs=timestamp+ADMISSION_TTL_MS;
-    // As duas cotas e a inserção fazem parte da mesma escrita SQLite.
-    const row=await db.prepare(ISSUE_SQL).bind(
+    // A associação vigente, as cotas e a inserção fazem parte da mesma escrita SQLite.
+    const row=await db.prepare(issueSql(mustRecheck)).bind(
       admissionHash,timestamp,expiresAtMs,tableId,tenantId,locationId,
+      ...(mustRecheck ? [membershipProof.issuer,membershipProof.subject,staff.staffId] : []),
       timestamp-ISSUE_WINDOW_MS,MAX_RECENT_PER_TABLE,timestamp,MAX_ACTIVE_PER_TABLE
     ).first();
     return row?.admission_hash===admissionHash ? {code,expiresAtMs} : null;

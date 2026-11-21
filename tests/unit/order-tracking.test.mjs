@@ -39,12 +39,16 @@ function fixture(t){
   return {sqlite,db,tracking,setTime:v=>time=v};
 }
 
-test("minuto 31 e nova requisição mantêm só o status do pedido; emissão original não repete",async t=>{
+test("minuto 31 e nova requisição mantêm só o status do pedido; reenvio não estende a validade",async t=>{
   const {sqlite,tracking,setTime}=fixture(t);
   const grant=await tracking.issue(req(actorA),orderA);
   assert.ok(grant);assert.equal(grant.expiresAtMs,1000+ORDER_TRACKING_TTL_MS);
-  assert.equal(await tracking.issue(req(actorA),orderA),null);
+  setTime(2000);
+  const duplicate=await Promise.all(Array.from({length:8},()=>tracking.issue(req(actorA),orderA)));
+  assert.ok(duplicate.every(retry=>retry?.token===grant.token&&retry.expiresAtMs===grant.expiresAtMs));
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM order_tracking_tokens").get().n,1);
   setTime(31*60000);
+  assert.equal(await tracking.issue(req(actorA),orderA),null);
   sqlite.exec("UPDATE orders SET status='preparing'");
   assert.equal(await tracking.issue(req(actorB),orderB),null);
   const r1=await tracking.read(req(grant.token),orderA);
@@ -77,6 +81,7 @@ test("revogação imediata e expiração no limite; limpeza local não apaga o p
   sqlite.prepare("UPDATE order_tracking_tokens SET revoked_at_ms=1001 WHERE token_hash=?").run(hash(a.token));
   setTime(1001);
   assert.equal(await tracking.read(req(a.token),orderA),null);
+  assert.equal(await tracking.issue(req(actorA),orderA),null);
   setTime(b.expiresAtMs-1);assert.ok(await tracking.read(req(b.token),orderB));
   setTime(b.expiresAtMs);assert.equal(await tracking.read(req(b.token),orderB),null);
   sqlite.prepare("DELETE FROM order_tracking_tokens WHERE expires_at_ms<=?").run(b.expiresAtMs);

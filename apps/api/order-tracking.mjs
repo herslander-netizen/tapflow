@@ -3,6 +3,7 @@ import {createOrderSessionAuthorizer} from "./order-session.mjs";
 
 export const ORDER_TRACKING_TTL_MS=24*60*60*1000;
 const ORDER_ID=/^ord_[a-f0-9]{40}$/;
+const SESSION_HEADER=/^Bearer ([A-Za-z0-9_-]{43})$/i;
 const TRACKING_HEADER=/^Bearer (tftrk_[A-Za-z0-9_-]{43})$/i;
 const MINT=`INSERT INTO order_tracking_tokens
   (token_hash,tenant_id,order_id,issued_at_ms,expires_at_ms)
@@ -15,8 +16,12 @@ const MINT=`INSERT INTO order_tracking_tokens
   JOIN tenants t ON t.id=o.tenant_id
   WHERE o.id=? AND s.session_hash=? AND s.expires_at_ms>? AND s.revoked_at_ms IS NULL
     AND d.is_active=1 AND l.status='active' AND t.status='active'
-  ON CONFLICT (tenant_id,order_id) DO NOTHING
-  RETURNING token_hash`;
+  ON CONFLICT (tenant_id,order_id) DO UPDATE SET issued_at_ms=order_tracking_tokens.issued_at_ms
+    WHERE order_tracking_tokens.token_hash=excluded.token_hash
+      AND order_tracking_tokens.revoked_at_ms IS NULL
+      AND order_tracking_tokens.issued_at_ms<=excluded.issued_at_ms
+      AND order_tracking_tokens.expires_at_ms>excluded.issued_at_ms
+  RETURNING token_hash,expires_at_ms`;
 const LOOKUP=`SELECT o.id,o.status,o.updated_at FROM order_tracking_tokens k
   JOIN orders o ON o.id=k.order_id AND o.tenant_id=k.tenant_id
   JOIN tenants t ON t.id=o.tenant_id
@@ -27,8 +32,13 @@ async function hashToken(token){
   const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(token));
   return Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,"0")).join("");
 }
-function newToken(){
-  const bytes=crypto.getRandomValues(new Uint8Array(32));
+async function recoverableToken(sessionToken,orderId){
+  // Session token is already an opaque random 256-bit capability. Never use its
+  // stored hash here: the database alone must not be able to recreate the grant.
+  const encode=new TextEncoder();
+  const key=await crypto.subtle.importKey("raw",encode.encode(sessionToken),
+    {name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const bytes=new Uint8Array(await crypto.subtle.sign("HMAC",key,encode.encode("tapflow/tracking/v1:"+orderId)));
   return "tftrk_"+btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
 }
 function validTime(timestamp){
@@ -38,17 +48,22 @@ function validTime(timestamp){
 export function createOrderTracking({db,now=Date.now,enabled=false}={}){
   const authorize=createOrderSessionAuthorizer({db,now});
   return {
-    // Emissão interna uma vez, antes de a sessão do pedido expirar. Só exibe o token no retorno.
+    // Retry com a sessão autora válida retorna o mesmo token sem estender validade.
+    // O banco grava apenas o hash e nunca recebe a sessão original.
     async issue(request,orderId){
       if(enabled!==true || typeof orderId!=="string" || !ORDER_ID.test(orderId)) return null;
       const context=await authorize(request);
       if(!context) return null;
       const timestamp=now();
       if(!validTime(timestamp)) return null;
-      const token=newToken(), hash=await hashToken(token), expiresAtMs=timestamp+ORDER_TRACKING_TTL_MS;
+      const sessionToken=SESSION_HEADER.exec(request.headers.get("authorization")??"")?.[1];
+      if(!sessionToken) return null;
+      const token=await recoverableToken(sessionToken,orderId), hash=await hashToken(token);
+      const expiresAtMs=timestamp+ORDER_TRACKING_TTL_MS;
       const row=await db.prepare(MINT).bind(hash,timestamp,expiresAtMs,
         orderId,context.sessionHash,timestamp).first();
-      return row?.token_hash===hash ? {token,expiresAtMs} : null;
+      return row?.token_hash===hash && Number.isSafeInteger(row.expires_at_ms)
+        ? {token,expiresAtMs:row.expires_at_ms} : null;
     },
     // Token aceita exclusivamente cabeçalho, GET, um pedido e campos mínimos.
     async read(request,orderId){

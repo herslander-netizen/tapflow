@@ -100,7 +100,7 @@ test("emissão ignora escopo declarado pelo chamador e exige mesa da unidade e e
     INSERT INTO locations (id,tenant_id,name,status) VALUES ('l2','t','Outra unidade','active'),('l3','t2','Outra loja','active');
     INSERT INTO dining_tables (id,tenant_id,location_id,label,is_active) VALUES ('m2','t','l2','Mesa 2',1),('m3','t2','l3','Mesa 3',1);
   `);
-  const issue=createOrderAdmissionIssuer({db,now:()=>now,authorizeStaff:async(ctx,permission)=>{
+  const issue=createOrderAdmissionIssuer({db,requireCurrentStaffMembership:false,now:()=>now,authorizeStaff:async(ctx,permission)=>{
     assert.equal(ctx.tenantId,"t2"); // Alegação não confiável que o adaptador ignora.
     assert.equal(permission,"issue_table_admission");
     return authority;
@@ -124,7 +124,7 @@ test("emissão ignora escopo declarado pelo chamador e exige mesa da unidade e e
 test("cotas por mesa: no máximo três abertas e seis emitidas na janela mesmo em chamadas sobrepostas",async t=>{
   const {sqlite,db}=fixture(t);
   let time=now;
-  const issue=createOrderAdmissionIssuer({db,now:()=>time,authorizeStaff:async()=>authority});
+  const issue=createOrderAdmissionIssuer({db,requireCurrentStaffMembership:false,now:()=>time,authorizeStaff:async()=>authority});
   const many=()=>Promise.all(Array.from({length:12},()=>issue(null,"m")));
   assert.equal((await many()).filter(Boolean).length,3);
   sqlite.exec(`UPDATE order_admissions SET revoked_at_ms=${now}`);
@@ -133,4 +133,33 @@ test("cotas por mesa: no máximo três abertas e seis emitidas na janela mesmo e
   assert.equal((await many()).filter(Boolean).length,0);
   time+=60000;
   assert.equal((await many()).filter(Boolean).length,3);
+});
+
+test("emissão padrão exige prova e bloqueia revogação entre autorização e INSERT",async t=>{
+  const {sqlite,db}=fixture(t);
+  const issuer="https://fixture.example",subject="test-sub";
+  const auth={...authority,membershipProof:{issuer,subject,tableId:"m"}};
+  sqlite.exec(readFileSync(new URL("../../infra/free-stack/d1/0007_order_staff_memberships.sql",import.meta.url),"utf8"));
+  sqlite.prepare("INSERT INTO order_staff_memberships VALUES (?,?,'staff','t','l','manager','active')").run(issuer,subject);
+  const withoutProof=createOrderAdmissionIssuer({db:{prepare:()=>assert.fail("consultou sem prova")},
+    now:()=>now,authorizeStaff:async()=>authority});
+  assert.equal(await withoutProof(null,"m"),null);
+
+  const issue=createOrderAdmissionIssuer({db,now:()=>now,requireCurrentStaffMembership:true,
+    authorizeStaff:async()=>{
+      // Estado ativo lido pelo adaptador. Simula atualização concorrente depois da leitura.
+      assert.equal(sqlite.prepare("SELECT status FROM order_staff_memberships").get().status,"active");
+      sqlite.exec("UPDATE order_staff_memberships SET status='suspended'");
+      return auth;
+    }});
+  assert.equal(await issue(null,"m"),null);
+  assert.equal(sqlite.prepare("SELECT count(*) n FROM order_admissions").get().n,0);
+
+  const stable=createOrderAdmissionIssuer({db,now:()=>now,authorizeStaff:async()=>auth});
+  sqlite.exec("UPDATE order_staff_memberships SET status='active',role='viewer'");
+  assert.equal(await stable(null,"m"),null);
+  sqlite.exec("UPDATE order_staff_memberships SET role='attendant',staff_id='other-operator'");
+  assert.equal(await stable(null,"m"),null);
+  sqlite.exec("UPDATE order_staff_memberships SET staff_id='staff'");
+  assert.ok(await stable(null,"m"));
 });
