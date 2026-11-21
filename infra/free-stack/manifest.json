@@ -13,24 +13,31 @@
     ],
     "verifyConnectedIdentityBeforeProvisioning": true
   },
-  "mode": "free-only-preparation",
+  "mode": "free-preview-provisioned",
   "provisioning": {
     "enabled": false,
     "automaticDeploy": false,
     "deployToProduction": false,
     "allowBillingUpgrade": false,
     "allowPaidAddons": false,
-    "requireManualOwnerApproval": true
+    "requireManualOwnerApproval": true,
+    "manualPreviewCreated": true
   },
   "environments": {
     "preview": {
-      "configured": false,
+      "configured": true,
       "workerName": "tapflow-preview",
       "databaseName": "tapflow-preview-db",
-      "staticAssets": "workers-static-assets",
-      "domain": "workers.dev (when activated)",
+      "staticAssets": "bundled-demo-in-worker",
+      "domain": "https://tapflow-preview.tapflowse.workers.dev",
       "mediaStorage": "bundled-demo-posters-only",
-      "publicCustomerData": false
+      "publicCustomerData": false,
+      "databaseId": "bf381ffc-9caa-4436-81b7-93f3cf6b8a25",
+      "schemaApplied": true,
+      "customerOrdersEnabled": false,
+      "paymentsEnabled": false,
+      "aiEnabled": false,
+      "externalBrowserValidation": "pending-github-actions"
     },
     "production": {
       "configured": false,
@@ -48,9 +55,9 @@
     },
     {
       "provider": "Cloudflare",
-      "service": "Workers Static Assets",
+      "service": "Workers (embedded prototype files)",
       "tier": "Free",
-      "status": "blocked-new-account-not-connected",
+      "status": "preview-deployed-manually",
       "purpose": "public SPA and API on workers.dev",
       "requiresAccountSetup": true
     },
@@ -58,7 +65,7 @@
       "provider": "Cloudflare",
       "service": "D1",
       "tier": "Workers Free",
-      "status": "blocked-new-account-not-connected",
+      "status": "preview-created-schema-applied",
       "purpose": "preview SQL storage only",
       "requiresAccountSetup": true
     },
@@ -90,7 +97,7 @@
       "provider": "Supabase",
       "service": "Postgres + Auth",
       "tier": "Free",
-      "status": "optional-unprovisioned",
+      "status": "account-connected-no-project-created",
       "purpose": "alternative database if tested/needed",
       "requiresAccountSetup": true
     },

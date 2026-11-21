@@ -17,7 +17,10 @@ test("ambientes isolados e conta exclusiva",()=>{
   assert.equal(manifest.accountPolicy.dedicatedAccountOnly,true);
   assert.equal(manifest.accountPolicy.verifyConnectedIdentityBeforeProvisioning,true);
   assert.equal(manifest.environments.production.enabled,false);
-  assert.equal(manifest.environments.preview.configured,false);
+  assert.equal(manifest.environments.preview.configured,true);
+  assert.equal(manifest.environments.preview.paymentsEnabled,false);
+  assert.equal(manifest.environments.preview.customerOrdersEnabled,false);
+  assert.equal(manifest.provisioning.manualPreviewCreated,true);
 });
 test("não salvar e-mail pessoal em inventário público",()=>{
   assert.equal(manifest.accountPolicy.accountEmailStoredInRepository,false);
