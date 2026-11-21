@@ -1,3 +1,4 @@
+import { loadMerchantSession } from "./merchant-auth0.mjs";
 import { DEFAULT_SETTINGS, THEME_PRESETS, createTheme, normalizeSettings } from "./theme.mjs";
 
 const sessionHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -356,5 +357,8 @@ export function mountMerchant({
 }
 
 if (typeof window !== "undefined") {
-  mountMerchant({ getAccessToken: window.tapflowMerchantGetAccessToken });
+  // Do not accept an injected browser global in the hosted build.
+  void loadMerchantSession().then(({managed,getAccessToken})=>{
+    if(!managed||getAccessToken)mountMerchant({getAccessToken});
+  });
 }

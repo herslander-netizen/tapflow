@@ -37,7 +37,7 @@ const env={
     {issuer,subject:"ui",slug:"cafeteria-piloto"}
   ]),
   ASSETS:{async fetch(request){
-    const m=/^\/([a-z-]+\.(?:html|css|mjs|svg|js))$/.exec(new URL(request.url).pathname);
+    const m=/^\/([a-z0-9-]+\.(?:html|css|mjs|svg|js))$/.exec(new URL(request.url).pathname);
     const file=new URL(request.url).pathname==="/"?"index.html":m?.[1];
     if(!file)return new Response(null,{status:404});
     const mime={html:"text/html",mjs:"text/javascript",js:"text/javascript",css:"text/css",svg:"image/svg+xml"}[file.split(".").at(-1)];

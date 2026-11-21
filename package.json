@@ -8,6 +8,10 @@
     "dev": "node scripts/serve.mjs",
     "start": "node scripts/serve.mjs",
     "test": "node --test tests/unit/*.test.mjs",
-    "build:preview": "node scripts/build-preview-worker.mjs"
+    "build:preview": "node scripts/build-preview-worker.mjs",
+    "build:merchant-preview": "node scripts/build-merchant-preview.mjs"
+  },
+  "devDependencies": {
+    "@auth0/auth0-spa-js": "2.30.0"
   }
 }

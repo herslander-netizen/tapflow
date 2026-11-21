@@ -29,6 +29,24 @@ function safeIssuer(s){
   catch{return false;}
 }
 
+// Opt-in only. Do not generalize audience matching to arbitrary arrays.
+export function isValidAuth0IdentityConfig(issuer,audience,auth0){
+  if(!safeIssuer(issuer)||!auth0||typeof auth0.clientId!=="string"||
+    !/^[A-Za-z0-9_-]{1,128}$/.test(auth0.clientId))return false;
+  if(auth0.userinfoAudience===undefined)return true;
+  const url=new URL(issuer);
+  return (url.pathname==="/"||url.pathname==="")&&
+    auth0.userinfoAudience===url.origin+"/userinfo"&&auth0.userinfoAudience!==audience;
+}
+
+function matchesAudience(value,audience,userinfo){
+  if(value===audience)return true;
+  if(!Array.isArray(value))return false;
+  if(value.length===1)return value[0]===audience;
+  return userinfo!==undefined&&value.length===2&&
+    ((value[0]===audience&&value[1]===userinfo)||(value[0]===userinfo&&value[1]===audience));
+}
+
 export function createD1StaffMembershipRepository(db){
   return async function findActiveMembership({issuer,subject,tableId}){
     if(typeof db?.prepare!=="function")throw new Error("Banco de funcionários indisponível");
@@ -43,10 +61,12 @@ export function createD1StaffMembershipRepository(db){
  * todas as permissões vêm da associação ativa no banco, não do JWT/cliente.
  */
 export function createVerifiedStaffIdentity({
-  enabled=false,issuer,audience,getVerificationKey,now=Date.now
+  enabled=false,issuer,audience,getVerificationKey,auth0,now=Date.now
 }={}){
   const configured=enabled===true&&safeIssuer(issuer)&&typeof audience==="string"&&
-    audience.length>0&&typeof getVerificationKey==="function";
+    audience.length>0&&typeof getVerificationKey==="function"&&
+    (auth0===undefined||isValidAuth0IdentityConfig(issuer,audience,auth0));
+  const auth0ClientId=auth0?.clientId, userinfoAudience=auth0?.userinfoAudience;
   return async function verifyIdentity(request){
     if(!configured)return null;
     const raw=request?.headers?.get("authorization");
@@ -71,11 +91,13 @@ export function createVerifiedStaffIdentity({
     if(!Number.isSafeInteger(timeMs)||timeMs<0)return null;
     const time=Math.floor(timeMs/1000);
     const aud=claims.aud;
-    if(claims.iss!==issuer||!(aud===audience || (Array.isArray(aud)&&aud.length===1&&aud[0]===audience))||
+    if(claims.iss!==issuer||!matchesAudience(aud,audience,userinfoAudience)||
       typeof claims.sub!=="string"||!/^[\x21-\x7e]{1,255}$/.test(claims.sub)||
       !Number.isSafeInteger(claims.iat)||claims.iat<0||claims.iat>time||
       !Number.isSafeInteger(claims.exp)||claims.exp<=time||claims.exp-claims.iat>MAX_TTL_S||
       (claims.nbf!==undefined&&(!Number.isSafeInteger(claims.nbf)||claims.nbf<0||claims.nbf>time)))return null;
+    if(auth0ClientId!==undefined&&(claims.client_id!==auth0ClientId||
+      claims.sub.endsWith("@clients")||claims.gty==="client-credentials"))return null;
     return {issuer,subject:claims.sub};
   };
 }

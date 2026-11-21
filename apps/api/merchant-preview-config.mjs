@@ -1,4 +1,4 @@
-import {createVerifiedStaffIdentity} from "./staff-identity.mjs";
+import {createVerifiedStaffIdentity,isValidAuth0IdentityConfig} from "./staff-identity.mjs";
 
 // Authentication is only available in an explicitly enabled isolated Worker.
 // No keys fetched from token-supplied URLs; rotate pinned public JWKs via deploy.
@@ -7,6 +7,14 @@ export function createMerchantPreviewConfig(request,env){
   const url=new URL(request.url);
   if(env.TAPFLOW_MERCHANT_PREVIEW!=="true"||url.origin!==origin||!env.DB)return null;
   try{
+    const provider=env.TAPFLOW_MERCHANT_IDENTITY_PROVIDER;
+    const issuer=env.TAPFLOW_MERCHANT_ISSUER,audience=env.TAPFLOW_MERCHANT_AUDIENCE;
+    const clientId=env.TAPFLOW_MERCHANT_CLIENT_ID;
+    const userinfoAudience=env.TAPFLOW_MERCHANT_AUTH0_USERINFO_AUDIENCE;
+    if(provider!==undefined&&provider!=="auth0")return null;
+    if(provider===undefined&&(clientId!==undefined||userinfoAudience!==undefined))return null;
+    const auth0=provider==="auth0"?{clientId,userinfoAudience}:undefined;
+    if(auth0&&!isValidAuth0IdentityConfig(issuer,audience,auth0))return null;
     const keys=JSON.parse(env.TAPFLOW_MERCHANT_PUBLIC_JWKS??"{}");
     if(!keys||!Array.isArray(keys.keys)||keys.keys.length===0||keys.keys.length>5)return null;
     const entries=new Map();
@@ -19,7 +27,7 @@ export function createMerchantPreviewConfig(request,env){
     const provisioningAllowlist=JSON.parse(env.TAPFLOW_MERCHANT_PROVISION_ALLOWLIST??"[]");
     if(!Array.isArray(provisioningAllowlist)||provisioningAllowlist.length>20)return null;
     const verifyIdentity=createVerifiedStaffIdentity({
-      enabled:true,issuer:env.TAPFLOW_MERCHANT_ISSUER,audience:env.TAPFLOW_MERCHANT_AUDIENCE,
+      enabled:true,issuer,audience,auth0,
       getVerificationKey:async kid=>{
         const pub=entries.get(kid);
         if(!pub)return null;

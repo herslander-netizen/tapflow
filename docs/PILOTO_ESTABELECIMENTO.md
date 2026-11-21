@@ -26,3 +26,15 @@ A base une demonstração Reels com identidade oficial e oito temas, pedidos em 
 ## Consolidação dos PRs
 
 O protótipo e a infraestrutura (#4–6), o piloto de pedido (#7), a identidade e validação mobile (#8) e os temas (#10) ficam no mesmo caminho de código. Do #9 foram preservados o estudo e as diretrizes; a implementação alternativa React permanece separada para não substituir a aplicação integrada por uma segunda demonstração com dados fictícios. Não misture os PRs originais individualmente em `main`.
+
+### Login hospedado preparado, ainda não ativado
+
+O painel agora pode usar Auth0 Universal Login (Authorization Code + PKCE) com SDK oficial fixado no lockfile, servido pelo próprio Worker. Faça `npm ci --ignore-scripts` e `npm run build:merchant-preview`. Para o **Worker de piloto dedicado** configure `assets.directory` como `.build/merchant-preview-assets`; não envie a demo sem banco ou sobrescreva o Worker de aparência. O comando de build apenas gera arquivos locais; não cria recursos.
+
+Se o responsável autorizar o provedor e o plano gratuito for verificado no painel da conta:
+1. Cadastre um app SPA e uma API exclusivos do TapFlow, com o retorno e a saída exatamente em `https://<origem-do-piloto>/merchant.html`, origem web restrita a esse host. Configure a **expiração principal da API** a 900 s, não a opção de fluxos implícitos. Use RFC 9068 e RS256.
+2. Valide um login hospedado com um usuário sintético, sem logar a resposta/tokens. Defina `TAPFLOW_MERCHANT_IDENTITY_PROVIDER=auth0` e `TAPFLOW_MERCHANT_CLIENT_ID`, além das variáveis já indicadas acima. Somente se o token normal vier com a segunda audiência, configure `TAPFLOW_MERCHANT_AUTH0_USERINFO_AUDIENCE` para o `/userinfo` da mesma origem do emissor. O Worker verifica o client ID assinado e nenhuma audiência adicional é autorizada.
+3. O SDK guarda os tokens só em memória; reload ou expiração exige voltar ao login. Não use segredos de Flow, client secret de SPA, cartão ou domínio pago. O SDK cobre estado, nonce e transação PKCE; nenhum token de produção deve ser copiado para o chat.
+4. Antes da migração e do deploy, confirme o banco exclusivo, conta Cloudflare Free e permissão de escrita, exporte o estado de prévia e valide o histórico. Comece com flags desligadas e homologue login, revogação, cadastro, publicação e leitura anônima antes de habilitar. Se plano ou acesso não verificado, não publique.
+
+Referência oficial: [Code + PKCE](https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-pkce) e [perfis de token](https://auth0.com/docs/secure/tokens/access-tokens/access-token-profiles).
