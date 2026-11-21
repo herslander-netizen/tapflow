@@ -1,0 +1,63 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "name": "TapFlow — Lime Noir (proposta visual) | ALVO Digital",
+  "status": "draft",
+  "color": {
+    "background": {
+      "$value": "#101410",
+      "$type": "color"
+    },
+    "surface": {
+      "$value": "#1E241F",
+      "$type": "color"
+    },
+    "accent": {
+      "$value": "#C8F45D",
+      "$type": "color"
+    },
+    "text": {
+      "$value": "#F5F7F2",
+      "$type": "color"
+    },
+    "muted": {
+      "$value": "#9BA79B",
+      "$type": "color"
+    },
+    "error": {
+      "$value": "#FF8076",
+      "$type": "color"
+    },
+    "warning": {
+      "$value": "#FFC36A",
+      "$type": "color"
+    },
+    "success": {
+      "$value": "#8DE0AD",
+      "$type": "color"
+    }
+  },
+  "radius": {
+    "control": {
+      "$value": "12px",
+      "$type": "dimension"
+    },
+    "card": {
+      "$value": "20px",
+      "$type": "dimension"
+    },
+    "sheet": {
+      "$value": "24px",
+      "$type": "dimension"
+    }
+  },
+  "motion": {
+    "quick": {
+      "$value": "160ms",
+      "$type": "duration"
+    },
+    "standard": {
+      "$value": "220ms",
+      "$type": "duration"
+    }
+  }
+}

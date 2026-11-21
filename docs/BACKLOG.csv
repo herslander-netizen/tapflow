@@ -1,0 +1,28 @@
+ID;Prioridade;Entrega;Critério de aceite
+F0-01;P0;Repositório **novo e privado**;Identificação ALVO, sem vínculo com repo de outros produtos
+F0-02;P0;Ambientes e CI;"Preview e produção separados; CI sem segredos e sem deploy prod automático"
+F0-03;P0;Tokens Lime Noir e componentes;Feed, sheet, botões, estados e contraste revisados
+F0-04;P0;Esquema inicial + RLS;Teste falha corretamente ao acessar outro tenant
+F1-01;P0;Cadastro tenant/unidade e permissões;Convite e papéis por unidade funcionando
+F1-02;P0;Cadastro de categorias/itens/adicionais;Formulários validam obrigatórios, preço e estoque
+F1-03;P0;Upload de foto/poster/vídeo;"Sem vazamento entre tenants; fallback para foto"
+F1-04;P0;Feed + lista + busca;Pausa/autoplay mudo, fallback e teclado funcionando
+F1-05;P0;QR e link NFC por mesa;Mesma URL, token revogável, mesa válida resolvida
+F1-06;P0;Detalhes e carrinho;Preço/limites de adicionais recalculados no backend
+F1-07;P0;Pedido no backend;Snapshot imutável, idempotência, controle transacional
+F1-08;P0;Painel de pedidos e cozinha;Pedido aparece e muda de estado com auditoria
+F1-09;P0;Acompanhamento com fallback;Cliente vê mudança mesmo após falha temporária do realtime
+F1-10;P0;Pagamento no local;Estado separado: pedido recebido, pagamento a receber
+F2-01;P0;Sandbox PSP + contrato de gateway;Iniciar cobrança sem armazenar cartão
+F2-02;P0;Webhook com assinatura + inbox;Repetido/fora de ordem não duplica nem regride status
+F2-03;P0;Pix/cartão seguro;“Pago” apenas após confirmação verificada
+F2-04;P0;Cancelamento/reembolso;Motivo, permissão, histórico e conciliação
+F2-05;P0;Recuperação de pedidos e erros;Sessão expirada, pagamento pendente e fluxo reentrante
+F3-01;P1;White-label configurável;Logo/cores por tenant sem perder contraste
+F3-02;P1;Central ALVO e plano/limites;Administrador vê saúde e consumo sem dados excessivos
+F3-03;P1;Analytics de conversão/custo;Métricas segmentadas sem dados pessoais desnecessários
+F3-04;P1;Onboarding e importação assistida;Cliente publica cardápio revisado sem equipe técnica
+F3-05;P1;Alertas e observabilidade;Erros de PSP, mídia e pedidos têm owner e resolução
+F4-01;P2;Integração com PDV/impressora;Contrato de API separado e testado
+F4-02;P2;Fidelização / notificações;Opt-in, privacidade e orçamento controlado
+F4-03;P2;Delivery/conta dividida;Descoberta e validação próprias, fora do MVP

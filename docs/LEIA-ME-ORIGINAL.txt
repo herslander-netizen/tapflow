@@ -1,0 +1,11 @@
+ALVO DIGITAL | CARDAPIO REELS — KIT DE ARRANQUE
+Data: 20/11/2026
+
+1) Leia o Documento Mestre (.md para Codex; .docx para apresentação).
+2) Use o Prompt Codex somente em um NOVO repositório autorizado.
+3) Tokens JSON formam o tema Lime Noir proposto, não uma identidade aprovada.
+4) O backlog CSV usa ponto-e-vírgula para facilitar abertura no Excel brasileiro.
+5) Nenhuma infraestrutura foi criada, nenhum pagamento foi integrado e nenhum deploy foi feito.
+6) Flow, Alvo OS e Evolution Alvo devem permanecer intocados.
+
+ALVO Digital e proprietária de todos os artefatos de produto.
