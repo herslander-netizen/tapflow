@@ -93,7 +93,7 @@ function videoOption(base,name,photo,layer){
   return {section,release,start};
 }
 const viewer=$("reelsViewer"), track=$("reelsTrack"), position=$("reelsPosition");
-const closeReels=$("closeReels"), previous=$("previousReel"), next=$("nextReel");
+const closeReels=$("closeReels"), previous=$("previousReel"), next=$("nextReel"), hint=$("reelsHint"), progress=$("reelsProgress");
 const historyKey="tapflowStorefrontReels";
 const modalSupported=typeof viewer.showModal==="function";
 const isOpen=()=>viewer.hasAttribute("open");
@@ -129,13 +129,19 @@ function makeSlide(item,index,total){
   slide.className="reels-frame";
   slide.setAttribute("aria-label",String(index+1)+" de "+total+": "+item.name);
   detail.className="reels-details";
-  if(item.categoryName)detail.append(element("p",item.categoryName));
-  detail.append(element("h2",item.name),element("strong",price.format(item.priceCents/100)));
-  if(item.description)detail.append(element("p",item.description));
-  if(!item.available)detail.append(element("p","Esgotado"));
+  if(item.categoryName){
+    const category=element("p",item.categoryName);category.className="reels-category";detail.append(category);
+  }
+  detail.append(element("h2",item.name));
+  const meta=element("div");meta.className="reels-meta";
+  meta.append(element("strong",price.format(item.priceCents/100)));
+  if(!item.available){const sold=element("span","Esgotado");sold.className="reels-sold";meta.append(sold);}
+  detail.append(meta);
+  if(item.description){const description=element("p",item.description);description.className="reels-description";detail.append(description);}
   const media=element("div");
   detail.append(media);
-  detail.append(element("p","Para pedir, fale com a equipe."));
+  const note=element("p","Para pedir, fale com a equipe.");
+  note.className="reels-note";detail.append(note);
   layer.append(photo);
   hero.append(layer,detail);
   slide.append(hero);
@@ -147,15 +153,26 @@ function makeSlide(item,index,total){
   }
   photo.className="reels-photo";
   const base=demoPhoto(path?.[1],path?.[2],item.id);
+  const fallback=element("p","Foto indisponível");
   if(base){
-    const image=picture(base,{large:true,loading:"lazy",alt:"Foto ilustrativa de "+item.name});
-    image.image.addEventListener("error",()=>photo.replaceChildren(element("p","Foto indisponível")));
+    // Offscreen slides render light thumbnails. Only visiting a slide requests its hero.
+    const image=picture(base,{alt:"Foto ilustrativa de "+item.name});
+    image.image.addEventListener("error",()=>{image.output.remove();if(!photo.querySelector("picture"))photo.append(fallback);});
     const caption=element("p","Foto ilustrativa da demonstração.");
     caption.className="reels-credit";detail.append(caption);
     photo.append(image.output);
     image.image.src=image.src;
-  }else photo.append(element("p","Foto indisponível"));
-  return {slide,photo,media,item,layer};
+  }else photo.append(fallback);
+  let requested=false;
+  function upgrade(){
+    if(!base||requested)return;
+    requested=true;
+    const art=picture(base,{large:true,loading:"eager",alt:"Foto ilustrativa de "+item.name});
+    art.image.setAttribute("fetchpriority","high");
+    art.image.addEventListener("load",()=>{if(slide.isConnected)photo.replaceChildren(art.output);},{once:true});
+    art.image.src=art.src;
+  }
+  return {slide,photo,media,item,layer,upgrade};
 }
 function releaseMotion(){
   motion?.release();
@@ -169,9 +186,16 @@ function activate(index){
   releaseMotion();
   active=index;reelSession.index=index;
   position.textContent=(index+1)+" de "+slides.length;
+  progress.max=slides.length;progress.value=index+1;
+  hint.textContent=slides.length===1?"Único prato nesta seleção":index===slides.length-1?"↓ Deslize para ver anteriores":"↑ Deslize para ver mais";
+  for(let i=0;i<slides.length;i++)slides[i].slide.inert=i!==index;
   previous.setAttribute("aria-disabled",String(index===0));
   next.setAttribute("aria-disabled",String(index===slides.length-1));
-  const {item,photo,media,layer}=slides[index];
+  const {item,photo,media,layer,upgrade}=slides[index];
+  clearTimeout(reelSession.photoTimer);
+  // Ignore briefly crossed slides during a fast fling.
+  if(!reelSession.shown){reelSession.shown=true;upgrade();}
+  else reelSession.photoTimer=setTimeout(upgrade,140);
   const videoBase=demoVideo(path?.[1],path?.[2],item.id);
   if(videoBase){
     motion=videoOption(videoBase,item.name,photo,layer);media.append(motion.section);
@@ -189,6 +213,7 @@ function moveTo(index){
 }
 function showReels(){
   if(isOpen()||!reelSession)return;
+  reelSession.shown=false;
   slides=reelSession.items.map((item,index)=>makeSlide(item,index,reelSession.items.length));
   track.replaceChildren(...slides.map(entry=>entry.slide));
   if(modalSupported)viewer.showModal();
@@ -212,7 +237,7 @@ function openReels(item,trigger){
 }
 function hideReels(){
   if(!isOpen())return;
-  cancelAnimationFrame(scrollFrame);scrollFrame=0;
+  cancelAnimationFrame(scrollFrame);scrollFrame=0;clearTimeout(reelSession?.photoTimer);
   releaseMotion();
   if(modalSupported)viewer.close();
   else{viewer.removeAttribute("open");shell.inert=false;}
@@ -238,7 +263,7 @@ viewer.addEventListener("keydown",event=>{
   if(modalSupported)return;
   if(event.key==="Escape"){event.preventDefault();exitReels();return;}
   if(event.key!=="Tab")return;
-  const controls=[...viewer.querySelectorAll("button:not(:disabled),[tabindex='0'],summary")].filter(el=>el.getClientRects().length);
+  const controls=[...viewer.querySelectorAll("button:not(:disabled),[tabindex='0'],summary")].filter(el=>el.getClientRects().length&&!el.closest("[inert]"));
   const index=controls.indexOf(document.activeElement);
   if(index<0||event.shiftKey&&index===0||!event.shiftKey&&index===controls.length-1){
     event.preventDefault();

@@ -15,11 +15,11 @@ const items=[
  ["aurora-croissant","Croissant de manteiga","Vitrine",1450,"Folhado"],
  ["fallback","Suco da casa muito comprido com laranja, manga, maracujá e um rótulo longo","Bebidas",1000,"Descrição extensa ".repeat(24)],
 ].map(([id,name,categoryName,priceCents,description])=>({id,name,categoryId:"cafes",categoryName:"Cafés",priceCents,description:description+" seleção",available:true,addons:[]}));
-const requests=[];let blockVideo=false,blockPhoto=false;
+const requests=[];let blockVideo=false,blockPhoto=false,blockThumbnail=false;
 const server=createServer(async(req,res)=>{
  const u=new URL(req.url,"http://localhost"); requests.push([req.method,u.pathname]);
  if(u.pathname===api){res.writeHead(200,{"content-type":"application/json"});return res.end(JSON.stringify({name:"Café Aurora",location:{name:"Vitrine fictícia"},appearance:{preset:"cafe",mode:"light"},orderingEnabled:false,items:[...items,{id:"excluded",name:"Excluído",categoryId:"other",categoryName:"Outra",priceCents:100,available:true,addons:[]}]}));}
- if((blockVideo&&/cap-motion/.test(u.pathname))||(blockPhoto&&/bolo-720/.test(u.pathname))){res.writeHead(404);return res.end();}
+ if((blockVideo&&/cap-motion/.test(u.pathname))||(blockPhoto&&/bolo-720/.test(u.pathname))||(blockThumbnail&&/bolo-(96|192)/.test(u.pathname))){res.writeHead(404);return res.end();}
  const f=u.pathname===path?"public-menu.html":u.pathname.slice(1);
  const mime={".css":"text/css",".mjs":"text/javascript",".html":"text/html",".webp":"image/webp",".jpg":"image/jpeg",".webm":"video/webm",".mp4":"video/mp4",".svg":"image/svg+xml"};
  if(!/^[\w./-]+$/.test(f)||f.split("/").includes("..")||!mime[extname(f)]){res.writeHead(404);return res.end();}
@@ -38,14 +38,17 @@ const server=createServer(async(req,res)=>{
  const waitForIndex=async (n,total=items.length)=>{await page.waitForFunction(({n,total})=>document.querySelector("#reelsPosition")?.textContent?.includes(n+" de "+total),{n,total});};
  const search=page.getByRole("searchbox");
  const trigger=(name)=>page.getByRole("button",{name:"Ver no Reels: "+name,exact:true});
+ const heroPaths=()=>requests.filter(([,p])=>/-720\.(webp|jpg)$/.test(p)).map(([,p])=>p);
  const videoCount=()=>requests.filter(([,p])=>/\.(mp4|webm)$/.test(p)).length;
  await page.goto(origin+path);
  await page.getByRole("heading",{name:"Café Aurora",exact:true}).waitFor();
  assert.equal(videoCount(),0);
+ assert.deepEqual(heroPaths(),[],"the list does not download full-size photos");
  await page.emulateMedia({reducedMotion:"no-preference"});
  await page.locator(".item-title-trigger").filter({hasText:items[1].name}).click();
  await dialog.waitFor();
  await page.waitForFunction(()=>{const v=document.querySelector("video");return v&&!v.paused&&v.currentTime>.15;});
+ assert.deepEqual([...new Set(heroPaths().map(p=>p.replace(/\.(jpg|webp)$/,"")))],["/menu-photos/aurora/cap-720"],"only the selected dish gets upgraded");
  assert.deepEqual(await dialog.locator("video").evaluate(v=>[v.muted,v.playsInline]),[true,true]);
  const box=await dialog.boundingBox(), viewport=page.viewportSize();
  assert.ok(box&&box.width>=viewport.width-2&&box.height>=viewport.height-2,
@@ -113,7 +116,11 @@ const server=createServer(async(req,res)=>{
  await dialog.getByText(/vídeo não carregou/i).waitFor();
  assert.equal(await page.locator("video").count(),0);
  await dialog.getByRole("button",{name:"Próximo item",exact:true}).click();await waitForIndex(3,6);
- await dialog.locator(".reels-frame").nth(2).getByText("Foto indisponível",{exact:false}).waitFor();
+ await page.waitForFunction(()=>{const i=document.querySelectorAll(".reels-frame")[2].querySelector("img");return i&&i.naturalWidth>0&&/bolo-(96|192)/.test(i.currentSrc);});
+ await page.keyboard.press("Escape");await dialog.waitFor({state:"hidden"});
+ blockThumbnail=true;await page.reload();
+ await trigger(items[2].name).click();await waitForIndex(3,6);
+ await dialog.locator(".reels-frame").nth(2).getByText("Foto indisponível",{exact:true}).waitFor();
  await page.keyboard.press("Escape");await dialog.waitFor({state:"hidden"});
  assert.deepEqual(errors,[]);assert.ok(requests.filter(([m])=>m!=="GET").length===0,"read-only, no mutating requests");
  for(const width of [360,430,1280]){

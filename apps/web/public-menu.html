@@ -32,12 +32,15 @@
  <dialog id="reelsViewer" aria-label="Reels do cardápio">
   <header class="reels-bar">
    <button id="closeReels" type="button" autofocus>Voltar à lista</button>
+   <span class="reels-kicker" aria-hidden="true">PRATOS EM REELS</span>
    <p id="reelsPosition" role="status" aria-live="polite"></p>
+   <progress id="reelsProgress" value="1" max="1" aria-hidden="true"></progress>
   </header>
   <div id="reelsTrack" tabindex="0" aria-label="Itens do cardápio em Reels"></div>
   <footer class="reels-bar reels-navigation">
-   <button id="previousReel" type="button">Item anterior</button>
-   <button id="nextReel" type="button">Próximo item</button>
+   <button id="previousReel" type="button" aria-label="Item anterior">↑</button>
+   <p id="reelsHint" aria-hidden="true"></p>
+   <button id="nextReel" type="button" aria-label="Próximo item">↓</button>
   </footer>
  </dialog>
 </body>
