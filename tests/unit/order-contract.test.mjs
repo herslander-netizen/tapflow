@@ -1,0 +1,11 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {validateOrder,quoteOrder} from "../../packages/contracts/order.mjs";
+const catalog=[{tenantId:"tenant_a",id:"burger",name:"Burger",price:3500,available:true,addons:[{id:"cheese",name:"Queijo",price:500}]}];
+const request={tenantId:"tenant_a",tableId:"mesa_08",lines:[{itemId:"burger",quantity:2,addonIds:["cheese"]}]};
+test("preço é calculado pelo catálogo, nunca pelo navegador",()=>{assert.equal(quoteOrder({...request,total:1,lines:[{...request.lines[0],unitPrice:1}]},catalog).total,8000)});
+test("não acessa produto de outro tenant",()=>{assert.throws(()=>quoteOrder({...request,tenantId:"tenant_b"},catalog))});
+test("rejeita produto esgotado",()=>{assert.throws(()=>quoteOrder(request,catalog.map(x=>({...x,available:false}))))});
+test("rejeita preço inválido",()=>{assert.throws(()=>quoteOrder(request,catalog.map(x=>({...x,price:-1}))))});
+test("rejeita quantidade e adicionais inválidos",()=>{assert.throws(()=>validateOrder({...request,lines:[{itemId:"burger",quantity:0,addonIds:[]}]}));assert.throws(()=>quoteOrder({...request,lines:[{itemId:"burger",quantity:1,addonIds:["bad"]}]},catalog))});
+test("deduplica e ordena adicionais para hash canônico",()=>{assert.deepEqual(validateOrder({...request,lines:[{itemId:"burger",quantity:1,addonIds:["cheese","cheese"]}]}).lines[0].addonIds,["cheese"])});
