@@ -35,3 +35,8 @@ Mesmo em preview, o D1 está **vazio de clientes**. Nunca cadastrar dados pessoa
 5. Secret de IA somente no ambiente após rotação da chave Gemini anteriormente exposta. Groq precisa de chave própria, sem compartilhamento pelo chat.
 
 Fontes: https://developers.cloudflare.com/d1/platform/pricing/ · https://developers.cloudflare.com/workers/platform/pricing/ · https://console.groq.com/docs/api-reference · https://console.groq.com/docs/rate-limits
+
+
+## Gemini — ativação controlada
+
+[Guia seguro](GEMINI_PRIVADO.md). Rota de administrador e limite diário preparados, sem credenciais embutidas. A ferramenta bloqueou a transferência automática da chave enviada no chat; cadastrar o secret manualmente no painel Cloudflare. Nenhuma IA pública habilitada.

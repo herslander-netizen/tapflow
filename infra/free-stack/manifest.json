@@ -37,7 +37,10 @@
       "customerOrdersEnabled": false,
       "paymentsEnabled": false,
       "aiEnabled": false,
-      "externalBrowserValidation": "pending-github-actions"
+      "externalBrowserValidation": "pending-github-actions",
+      "aiFreeTierConfirmed": false,
+      "aiSecretStatus": "manual-install-required",
+      "aiRequestsMaxPerUTCday": 5
     },
     "production": {
       "configured": false,
