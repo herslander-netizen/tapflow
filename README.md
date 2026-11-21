@@ -48,3 +48,7 @@ Leia `docs/PRD.md` e execute apenas o escopo permitido em `docs/PROMPT_CODEX_FAS
 ---
 
 **Proprietária:** ALVO Digital · **Status:** documentação inicial · **Sem vínculo com a KAIRÓS Produtora**
+
+## Protótipo visual em desenvolvimento
+
+O diretório [apps/web](apps/web/README.md) contém agora uma primeira experiência **demonstrativa** em React/TypeScript, com feed de fotos, lista, carrinho e acompanhamento simulado. Não possui backend, vídeos gastronômicos originais, pagamento nem deploy. Consulte [análise UX/UI](docs/ANALISE_PESQUISA_UXUI_2026.md) e [Prompt Master V2](docs/PROMPT_MASTER_UXUI_V2.md).

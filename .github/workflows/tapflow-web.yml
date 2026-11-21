@@ -1,0 +1,24 @@
+name: TapFlow Web — verificações
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/tapflow-web.yml"
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund --legacy-peer-deps
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
