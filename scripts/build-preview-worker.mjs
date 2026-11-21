@@ -3,7 +3,7 @@ import {readFile,mkdir,writeFile} from "node:fs/promises";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
-const names=["index.html","styles.css","experience.css","app.js","domain.mjs","demo-data.js","media.mjs"];
+const names=["index.html","styles.css","experience.css","theme.css","theme.mjs","theme-panel.mjs","app.js","domain.mjs","demo-data.js","media.mjs"];
 const files={};
 for(const name of names)files["/"+name]=await readFile(resolve(root,"apps/web",name),"utf8");
 if(!files["/index.html"].includes("mainContent")||!files["/app.js"].includes("renderFeed"))throw Error("Fontes da experiência incompletas");

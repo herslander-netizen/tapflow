@@ -1,0 +1,92 @@
+/*
+ * TapFlow — mapeamento dos tokens da marca do ESTABELECIMENTO para a
+ * vitrine, sem CSS livre. Sobrescrita incremental da interface existente.
+ */
+:root { color-scheme: var(--theme-color-scheme, dark); }
+body { background: var(--bg); color: var(--text); }
+.topbar { background: var(--bg); color:var(--text); }
+.sidebar, .rightbar, .main-area { background:var(--bg); color:var(--text); }
+.main-area { background: radial-gradient(ellipse at 50% 40%,var(--surface) 0%,var(--bg) 73%); }
+.rightbar,.sidebar,.topbar { border-color:var(--stroke); }
+.side-panel,.food-card,.kitchen-ticket,.summary-stat,.order-id { background:var(--surface-card);border-color:var(--stroke);color:var(--text); }
+.hero-food-icon,.search-field,.chips button,.btn-secondary,.qty-actions button,
+.quantity button,.icon-button,.feed-controls .control-circle,.side-link.active,
+.step .step-dot,.option-row,.input { background:var(--surface-input);color:var(--text);border-color:var(--stroke); }
+.search-field input,.input,.sheet { color:var(--text); }
+.search-field input::placeholder { color:var(--muted);opacity:1; }
+.side-link { color:var(--text); }
+.side-link.active,.sidebar h1 em { color:var(--accent); }
+.btn-primary,.add-circle,.chips button.active,.feed-switch button.active,.reel-cta,
+.step.active .step-dot,.feed-controls .control-circle.primary,.side-link .mini-count {
+  background:var(--accent);color:var(--on-accent);border-color:var(--accent);
+}
+.btn-ghost {border-color:var(--accent);color:var(--accent);}
+.reel, .reel-content, .reel-top { color:white; }
+.reel .reel-kicker {color:#FFFFFF;}
+.reel-cta {text-shadow:none;}
+.sheet,.sheet-head,.sheet-foot { background:var(--surface);color:var(--text); }
+.sheet-foot {background:linear-gradient(transparent,var(--surface) 18%);}
+.sheet .close-btn { background:var(--surface-input);border-color:var(--stroke);color:var(--text);}
+.sheet .detail-desc,.collection-desc,.side-panel p,.sidebar-intro { color:var(--muted); }
+.favorite-inline { color:var(--accent); }
+body:has(.appearance-dialog[open]) { overflow:hidden; }
+[data-tapflow-appearance="light"] .demo-note {color:#60430E;background:#FFF4DA;border-color:#D8BA7A;}
+[data-tapflow-appearance="light"] .reel-top,
+[data-tapflow-appearance="light"] .reel-content {color:#FFFFFF;}
+[data-tapflow-appearance="light"] .feed-switch button {color:white;}
+[data-tapflow-appearance="light"] .feed-switch button.active {color:var(--on-accent);}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible {outline:3px solid var(--text);outline-offset:3px;}
+/* Controles de aparência somente na demonstração — não fazem parte do cardápio público real. */
+.appearance-open {display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:7px 12px;background:var(--surface-card);border:1px solid var(--stroke);border-radius:11px;color:var(--text);font-size:12px;font-weight:800;white-space:nowrap;}
+.appearance-open:hover {outline:1px solid var(--text);}
+.appearance-dialog {position:fixed;inset:0;margin:auto;max-height:min(92dvh,920px);height:auto;width:min(630px,calc(100vw - 20px));border:1px solid #c7d4c8;border-radius:24px;overflow:auto;padding:0;background:#FEFBF6;color:#101A13;box-shadow:0 35px 85px #0009;z-index:100;}
+.appearance-dialog::backdrop {background:#05100bd9;backdrop-filter:blur(5px);}
+.appearance-dialog-inner {padding:23px;}
+.appearance-head {display:flex;align-items:start;justify-content:space-between;gap:15px;}
+.appearance-eyebrow {font-size:10px;letter-spacing:.17em;color:#315D3F;font-weight:800;}
+.appearance-head h2 {font-size:26px;line-height:1.1;letter-spacing:-.05em;margin:7px 0 12px;}
+.appearance-close {display:grid;place-items:center;width:44px;height:44px;border:1px solid #CCDCCB;border-radius:13px;background:#E8F1E8;color:#101A13;font-size:28px;flex:none;}
+.appearance-description {font-size:13px;line-height:1.6;color:#476048;margin:0 0 19px;}
+.appearance-dialog h3 {font-size:14px;margin:18px 0 11px;font-weight:800;}
+.appearance-presets {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+.appearance-preset {min-height:100px;border:2px solid #D2E0D2;background:white;color:#101A13;border-radius:13px;display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:10px;gap:4px;}
+.appearance-preset.is-selected {border-color:#024519;background:#EAF4E9;box-shadow:0 0 0 1px #024519;}
+.appearance-preset strong {font-size:13px;}
+.appearance-preset small {color:#4C6350;font-size:10px;line-height:1.3;}
+.appearance-swatch {display:flex;height:18px;gap:3px;margin-bottom:5px;}
+.appearance-swatch i {display:block;flex:1;border:1px solid #0001;border-radius:4px;}
+.appearance-modes {display:flex;align-items:center;gap:22px;padding:12px 0 5px;margin:17px 0 4px;border:0;border-top:1px solid #D7E3D5;flex-wrap:wrap;}
+.appearance-modes legend {font-size:13px;font-weight:800;padding-top:10px;}
+.appearance-modes label {display:inline-flex;gap:7px;align-items:center;min-height:42px;font-size:13px;font-weight:700;}
+.appearance-dialog input[type="radio"],.appearance-dialog input[type="color"] {accent-color:#024519;}
+.appearance-color-grid {display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.appearance-color-grid label {font-size:12px;font-weight:800;display:flex;flex-direction:column;gap:8px;}
+.appearance-color-control {display:flex;align-items:center;gap:10px;background:#EEF5EA;border:1px solid #CDDBCD;border-radius:10px;padding:6px 10px;min-height:50px;}
+.appearance-color-control input[type="color"] {width:46px;height:34px;padding:0;border:0;background:none;cursor:pointer;}
+.appearance-color-control output {font-variant-numeric:tabular-nums;font-size:12px;}
+.appearance-reset-colors {background:transparent;border:0;padding:11px 0;color:#024519;text-decoration:underline;font-size:12px;font-weight:800;min-height:44px;text-align:left;}
+.appearance-preview {margin-top:8px;padding:15px;border:1px solid;border-radius:14px;display:flex;flex-direction:column;gap:10px;}
+.appearance-preview>span {font-weight:800;font-size:10px;letter-spacing:.13em;}
+.appearance-preview>strong {font-size:17px;letter-spacing:-.035em;}
+.appearance-preview-row {display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;}
+.appearance-preview-row>span {display:inline-flex;min-height:42px;padding:9px 13px;align-items:center;justify-content:center;border-radius:9px;font-weight:800;}
+.appearance-contrast {font-size:11px;color:#2E5B36;font-weight:750;line-height:1.5;}
+.appearance-local-warning {border-left:3px solid #C39337;color:#5B4521;background:#FFF6E5;border-radius:6px;padding:10px;font-size:11px;line-height:1.5;}
+.appearance-actions {display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:19px;flex-wrap:wrap;}
+.appearance-actions button {min-height:44px;border-radius:10px;padding:10px 13px;font-weight:800;font-size:12px;}
+.appearance-action-muted {background:transparent;color:#024519;border:0;margin-right:auto;text-decoration:underline;}
+.appearance-action-secondary {background:#EAF2E9;color:#024519;border:1px solid #BFCFC0;}
+.appearance-action-save {background:#024519;color:white;border:1px solid #024519;}
+.appearance-dialog button:focus-visible,.appearance-dialog input:focus-visible {outline:3px solid #024519;outline-offset:2px;}
+.appearance-feedback {font-size:11px;}
+@media(max-width:740px) {
+  .topbar {background:linear-gradient(#090D0BDD,#090D0B00);color:#FFFFFF;}
+  .topbar .brand-text>span {color:#B6E229;}
+  .topbar .demo-tag {display:none;}
+  .appearance-open {min-height:38px;padding:7px 9px;background:#16251BD9;color:#FFFFFF;border-color:#ffffff44;font-size:11px;}
+  .appearance-dialog {width:100%;max-height:94dvh;border-radius:24px 24px 0 0;margin:auto 0 0;bottom:0;top:auto;}
+  .appearance-dialog-inner {padding:18px 17px max(20px,env(safe-area-inset-bottom));}
+  .appearance-head h2 {font-size:23px;}
+}
+@media(max-width:375px) {.topbar-context{gap:6px}.appearance-open{padding-inline:8px}.appearance-preset{min-height:98px}.appearance-color-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce) {.appearance-dialog,.appearance-dialog::backdrop{animation:none;transition:none}}

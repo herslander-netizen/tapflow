@@ -1,0 +1,38 @@
+name: TapFlow — verificar prévia pública
+on:
+  pull_request:
+    branches: [main, "feat/tapflow-integrado-preview-api"]
+    paths:
+      - ".github/workflows/tapflow-live-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verificar versão pública real
+        env:
+          BASE: https://tapflow-aparencia-demo.tapflowse.workers.dev
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --location --retry 3 --retry-all-errors --max-time 25 "$BASE/__preview/status" -o status.json
+          python3 - <<'PY'
+          import json
+          status=json.load(open("status.json"))
+          assert status["product"]=="TapFlow", status
+          assert status["environment"]=="preview-only", status
+          assert status["ordersEnabled"] is False, status
+          assert status["realPayments"] is False, status
+          assert status["themePersistence"]=="local-browser-only", status
+          print("Status público confirmado:",status)
+          PY
+          curl --fail --show-error --silent --location --retry 3 --retry-all-errors --max-time 25 "$BASE/" -o index.html
+          grep -q "theme-panel.mjs" index.html
+          grep -q "theme.css" index.html
+          curl --fail --show-error --silent --location --max-time 25 "$BASE/theme-panel.mjs" -o theme-panel.mjs
+          grep -q 'Aparência do cardápio' theme-panel.mjs
+          curl --fail --show-error --silent --location --max-time 25 "$BASE/theme.mjs" -o theme.mjs
+          grep -q "THEME_PRESETS" theme.mjs
+          printf '%s\n' "Prévia online e arquivos de tema acessíveis."
