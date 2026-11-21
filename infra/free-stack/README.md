@@ -40,3 +40,6 @@ Fontes: https://developers.cloudflare.com/d1/platform/pricing/ · https://develo
 ## Gemini — ativação controlada
 
 [Guia seguro](GEMINI_PRIVADO.md). Rota de administrador e limite diário preparados, sem credenciais embutidas. A ferramenta bloqueou a transferência automática da chave enviada no chat; cadastrar o secret manualmente no painel Cloudflare. Nenhuma IA pública habilitada.
+
+
+**21/11/2026 — IA administrativa:** rota protegida POST /api/admin/ai/description implantada manualmente no Worker de prévia, D1 ai_daily_usage aplicado e verificado, 5 tentativas/dia. A Cloudflare confirmou nenhum secret configurado — o endpoint permanece inacessível sem segredo administrativo e chave Gemini. CI agora também verifica GET=405 e POST não autenticado=401. A versão do Worker que o PR #4 gera não inclui essa rota; **não fazer novo deploy do build do PR #4 diretamente**, até consolidarmos as duas branches e os respectivos módulos.

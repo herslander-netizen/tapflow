@@ -34,3 +34,16 @@ test("API real não aceita POST de pedidos",async()=>{
  const r=await fetch(ORIGIN+"/api/orders",{method:"POST",headers:{"content-type":"application/json"},body:"{}"});
  assert.equal(r.status,405);
 });
+
+
+test("rota Gemini exige autenticação; nenhum segredo necessário para este teste",async()=>{
+ const unsupported=await fetch(ORIGIN+"/api/admin/ai/description",{method:"GET",signal:AbortSignal.timeout(16000)});
+ assert.equal(unsupported.status,405);
+ const rejected=await fetch(ORIGIN+"/api/admin/ai/description",{
+   method:"POST",
+   headers:{"content-type":"application/json"},
+   body:JSON.stringify({name:"Burger",ingredients:"pão, queijo"}),
+   signal:AbortSignal.timeout(16000)
+ });
+ assert.equal(rejected.status,401);
+});

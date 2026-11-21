@@ -37,10 +37,12 @@
       "customerOrdersEnabled": false,
       "paymentsEnabled": false,
       "aiEnabled": false,
-      "externalBrowserValidation": "pending-github-actions",
+      "externalBrowserValidation": "github-actions-http-smoke",
       "aiFreeTierConfirmed": false,
-      "aiSecretStatus": "manual-install-required",
-      "aiRequestsMaxPerUTCday": 5
+      "aiSecretStatus": "no-secrets-configured-manual-dashboard-step",
+      "aiRequestsMaxPerUTCday": 5,
+      "aiIntegrationStatus": "private-route-deployed-locked",
+      "aiQuotaTableApplied": true
     },
     "production": {
       "configured": false,
