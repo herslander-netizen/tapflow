@@ -9,6 +9,8 @@ on:
       - "tests/unit/groq.test.mjs"
       - "tests/unit/ai-preview-route.test.mjs"
       - "tests/unit/evolution-alvo.test.mjs"
+      - "tests/unit/agents.test.mjs"
+      - "packages/agents/**"
       - "tests/integration/preview-smoke.test.mjs"
       - ".github/workflows/tapflow-free-verify.yml"
   workflow_dispatch:
@@ -30,8 +32,10 @@ jobs:
           node --check infra/free-stack/groq.mjs
           node --check infra/free-stack/ai-preview-route.mjs
           node --check infra/free-stack/evolution-alvo.mjs
+          node --check packages/agents/registry.mjs
+          node --check packages/agents/engine.mjs
       - name: Testar segurança, Gemini e Groq (sem credenciais)
-        run: node --test tests/unit/free-infra.test.mjs tests/unit/gemini.test.mjs tests/unit/groq.test.mjs tests/unit/ai-preview-route.test.mjs tests/unit/evolution-alvo.test.mjs
+        run: node --test tests/unit/free-infra.test.mjs tests/unit/gemini.test.mjs tests/unit/groq.test.mjs tests/unit/ai-preview-route.test.mjs tests/unit/evolution-alvo.test.mjs tests/unit/agents.test.mjs
       - name: Testar prévia pública e status D1 (somente leitura)
         run: node --test tests/integration/preview-smoke.test.mjs
       # Sem secrets, sem migrações, sem deploy, sem criar recursos, sem pagamentos.

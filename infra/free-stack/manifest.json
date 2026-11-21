@@ -47,7 +47,11 @@
       "evolutionProjectSlug": "tapflow",
       "evolutionWhatsAppConnected": false,
       "evolutionSendEnabled": false,
-      "evolutionAdapterDeployed": false
+      "evolutionAdapterDeployed": false,
+      "agentsStatus": "five-draft-only-internal-modules",
+      "agentCount": 5,
+      "agentAutonomousActions": false,
+      "agentsDeployed": false
     },
     "production": {
       "configured": false,
