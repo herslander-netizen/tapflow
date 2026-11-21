@@ -70,18 +70,26 @@ export function createTheme(value) {
   const card = mixColors(background, text, settings.mode === "dark" ? 0.115 : 0.085);
   const muted = ensureContrast(mixColors(background, text, 0.72), background, 4.5);
   const stroke = mixColors(background, text, 0.24);
+  const input = mixColors(background, text, 0.13);
+  const onInput = readableText(input);
+  const onCard = readableText(card);
   const tokens = {
     "--bg": background,
     "--surface": surface,
     "--surface-card": card,
-    "--surface-input": mixColors(background, text, 0.13),
+    "--surface-input": input,
+    "--on-input": onInput,
+    "--control-border": ensureContrast(stroke, background, 3),
+    "--focus-on-input": onInput,
     "--accent": accent,
     "--on-accent": onAccent,
     "--text": text,
     "--muted": muted,
     "--stroke": stroke,
     "--focus": ensureContrast(accent, background, 3),
-    "--on-surface": readableText(card),
+    "--on-surface": onCard,
+    "--muted-on-surface": ensureContrast(mixColors(card, onCard, 0.74), card, 4.5),
+    "--focus-on-surface": ensureContrast(accent, card, 3),
     "--theme-color-scheme": settings.mode
   };
   return { settings, tokens, rawAccent, effectiveAccent:accent,

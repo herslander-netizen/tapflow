@@ -11,18 +11,21 @@
 <body>
  <main class="menu-shell">
   <header class="menu-header">
-   <p class="label" id="storeLocation">TapFlow · Cardápio</p>
-   <p class="label" id="tableBadge" hidden></p>
+   <div class="menu-context">
+    <p class="label" id="storeLocation">TapFlow · Cardápio</p>
+    <p class="table-badge" id="tableBadge" hidden></p>
+   </div>
    <h1 id="storeTitle">Cardápio</h1>
-   <p>Consulte preços e adicionais. Para pedir, fale com a equipe do estabelecimento.</p>
+   <p class="menu-intro">Para pedir, fale com a equipe do estabelecimento.</p>
   </header>
   <p id="menuStatus" role="status" aria-live="polite">Carregando cardápio…</p>
   <button type="button" id="retry" hidden>Tentar novamente</button>
   <section id="catalog" aria-label="Itens do cardápio" hidden>
    <label for="menuSearch">Buscar no cardápio</label>
-   <input type="search" id="menuSearch" placeholder="Nome, categoria ou ingrediente">
+   <input type="search" id="menuSearch" placeholder="Nome, categoria ou descrição">
    <fieldset id="categories" hidden><legend>Categorias</legend><div id="categoryButtons"></div></fieldset>
-   <ul id="menuItems"></ul>
+   <ul id="menuItems" role="list"></ul>
+   <button type="button" id="clearFilters" hidden>Limpar filtros</button>
   </section>
   <footer>Cardápio por TapFlow · <span>piloto de leitura</span></footer>
  </main>
