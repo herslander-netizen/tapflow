@@ -4,7 +4,7 @@
  */
 const GEMINI_URL="https://generativelanguage.googleapis.com/v1beta/models/";
 const DEFAULT_MODEL="gemini-3.5-flash-lite";
-const CLEAN_TEXT=/[<>\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]/g;
+const CLEAN_TEXT=/[<>\u0000-\u001F]/g;
 
 export function normalizeProductDraft(input){
   if(!input||typeof input!=="object")throw new TypeError("Produto inválido");

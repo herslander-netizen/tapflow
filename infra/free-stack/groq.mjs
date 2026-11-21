@@ -28,6 +28,6 @@ export async function suggestProductDescriptionGroq(input,{env,fetcher=fetch}={}
     const data=await response.json();
     const content=data?.choices?.[0]?.message?.content;
     if(typeof content!=="string"||!content.trim())throw new Error("A IA não retornou uma descrição");
-    return {description:content.trim().replace(/[<>\x00-\x1f]/g,"").slice(0,180),source:"groq",model,reviewRequired:true,published:false};
+    return {description:content.trim().replace(/[<>\u0000-\u001F]/g,"").slice(0,180),source:"groq",model,reviewRequired:true,published:false};
   }finally{clearTimeout(timeout);}
 }

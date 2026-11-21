@@ -10,9 +10,10 @@ test("Groq não dispara sem habilitação explícita",async()=>{
 test("Groq exige chave e modelo, sem enviar chave no prompt ou URL",async()=>{
  const seen={};
  const fetcher=async(url,opts)=>{seen.url=url;seen.body=opts.body;seen.authorization=opts.headers.authorization;
-   return {ok:true,json:async()=>({choices:[{message:{content:"Burger com pão, carne e queijo."}}]})};};
+   return {ok:true,json:async()=>({choices:[{message:{content:"Pão, carne e queijo."}}]})};};
  const v=await suggestProductDescriptionGroq(product,{env,fetcher});
  assert.equal(v.published,false);assert.equal(v.reviewRequired,true);assert.equal(v.source,"groq");
+ assert.equal(v.description,"Pão, carne e queijo.");
  assert.ok(seen.authorization.includes(env.GROQ_API_KEY));
  assert.ok(!seen.url.includes(env.GROQ_API_KEY) && !seen.body.includes(env.GROQ_API_KEY));
 });
