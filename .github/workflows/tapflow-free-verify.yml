@@ -18,8 +18,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Verificar sintaxe do Worker
-        run: node --check infra/free-stack/worker.mjs
+      - name: Verificar sintaxe do Worker e adapter Gemini
+        run: |
+          node --check infra/free-stack/worker.mjs
+          node --check infra/free-stack/gemini.mjs
       - name: Testar modo gratuito e bloqueio de deploy
-        run: node --test tests/unit/free-infra.test.mjs
+        run: node --test tests/unit/free-infra.test.mjs tests/unit/gemini.test.mjs
       # Intencional: nenhum login, segredo, deploy, criação de banco ou chamada a serviços pagos.
