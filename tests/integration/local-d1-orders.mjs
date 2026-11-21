@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createOrderAdmissionIssuer } from "../../apps/api/order-admission.mjs";
+import { createOrderTracking } from "../../apps/api/order-tracking.mjs";
 const [repo, miniflareFile] = process.argv.slice(2);
 if (!repo || !miniflareFile) throw Error("Informe checkout e entrada Miniflare local");
 const { Miniflare } = await import(pathToFileURL(miniflareFile));
@@ -27,7 +28,7 @@ const modules = [
 const mf = new Miniflare({modules, compatibilityDate:"2026-08-06", d1Databases:{DB:"tapflow-local-qa-only"}, d1Persist:false, telemetry:{enabled:false}});
 try {
   const db = await mf.getD1Database("DB");
-  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql", "infra/free-stack/d1/0005_order_admission_issue_index.sql"]) {
+  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql", "infra/free-stack/d1/0005_order_admission_issue_index.sql", "infra/free-stack/d1/0006_order_tracking_tokens.sql"]) {
     const sql = (await get(path)).split("\n").filter(line => !/^\s*--|^\s*PRAGMA/.test(line)).join("\n");
     const triggerAt=sql.indexOf("CREATE TRIGGER");
     const plain=triggerAt<0?sql:sql.slice(0,triggerAt);
@@ -80,6 +81,21 @@ try {
   const ids=new Set((await Promise.all(attempts.map(x=>x.json()))).map(x=>x.id));
   assert.equal(ids.size,1); const [id]=ids; const status="/v1/orders/"+id;
   assert.equal((await call(status,main.token)).status,200);
+  let trackingTime=Date.now();
+  const tracker=createOrderTracking({db,now:()=>trackingTime,enabled:true});
+  const trackRequest=(token,method="GET")=>new Request("http://localhost"+status,
+    {method,headers:{authorization:"Bearer "+token}});
+  assert.equal(await tracker.issue(trackRequest(otherTable.token),id),null);
+  const trackGrant=await tracker.issue(trackRequest(main.token),id);
+  assert.ok(trackGrant);
+  trackingTime+=31*60*1000;
+  assert.equal(await tracker.issue(trackRequest(main.token),id),null);
+  assert.equal((await tracker.read(trackRequest(trackGrant.token),id)).status,"submitted");
+  assert.equal(await tracker.read(trackRequest(trackGrant.token,"POST"),id),null);
+  assert.equal((await call(status,trackGrant.token)).status,401);
+  trackingTime=trackGrant.expiresAtMs;
+  assert.equal(await tracker.read(trackRequest(trackGrant.token),id),null);
+
   assert.equal((await call(status,otherTable.token)).status,404);
   assert.equal((await call(status,otherTenant.token)).status,404);
   assert.equal((await call("/v1/quotes",expired.token,cart)).status,401);
@@ -88,7 +104,7 @@ try {
   assert.equal((await call("/v1/orders",main.token,cart,"miniflare-order-test-2")).status,401);
   for(const table of ["orders","order_lines","order_events","order_idempotency"])
     assert.equal(await db.prepare("SELECT count(*) AS n FROM "+table).first("n"),1);
-  console.log("D1 local: emissão autorizada e limitada, código de mesa de uso único (20 tentativas), cotação, pedido, status, seis reenvios concorrentes, expiração, revogação, isolamento da mesa/tenant; PASS");
+  console.log("D1 local: emissão autorizada e limitada, código de mesa de uso único (20 tentativas), cotação, pedido, status, seis reenvios concorrentes, expiração, revogação, isolamento da mesa/tenant e acompanhamento somente de leitura após 31 min; PASS");
 } finally {
   await mf.dispose();
 }

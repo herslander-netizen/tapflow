@@ -1,0 +1,7 @@
+# Continuação do acompanhamento de pedido (prévia fechada)
+
+A sessão de mesa continua valendo 30 minutos para cotar e pedir. O acompanhamento pode usar outra credencial opaca, de um único pedido, somente leitura e por até 24 horas. A emissão é interna, uma vez por pedido confirmado, autorizada pela sessão que o criou ainda ativa; não há recuperação automática do token perdido. Uma futura integração deve tratar perda da resposta da emissão antes de publicar.
+
+O código não adiciona endpoint. A integração futura precisa usar cabeçalho de autorização sobre HTTPS, resposta não armazenável em cache e armazenamento seguro no cliente com ciclo de vida deliberado. A biblioteca permite atualizar a página quando o cliente reapresenta o mesmo token; não escolhe como o navegador o conserva. Não incluir em URL, histórico, telemetria ou logs. O banco armazena só o hash. O token não habilita novos pedidos nem consulta de outros pedidos, mesmo de outra pessoa na mesma mesa.
+
+A recusa após expiração ou revogação está implementada. A retenção proposta para o hash é, no máximo, até o fim das 24 horas; a remoção de registros vencidos ainda não está automatizada e é requisito antes de habilitar. A revogação antecipada deve definir `revoked_at_ms` por fluxo administrativo futuro, não por rota pública. A retenção do pedido em si é separada. Nenhuma chave, campo privado de cliente ou corpo do pedido é devolvido pela leitura.
