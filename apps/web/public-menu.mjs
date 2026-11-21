@@ -45,13 +45,19 @@ async function load(){
   retry.hidden=true;catalog.hidden=true;status.textContent="Carregando cardápio…";
   if(!path){status.textContent="Link de cardápio inválido.";return;}
   try{
-    const response=await fetch("/api/public/menu/"+path[1]+"/"+path[2],{cache:"no-store",signal:AbortSignal.timeout(12000)});
-    if(response.status===404){status.textContent="Este cardápio ainda não foi publicado ou está indisponível.";return;}
+    const choice=new URLSearchParams(location.search).getAll("mesa");
+    if(choice.length>1||(choice.length===1&&!/^[A-Za-z0-9_-]{1,64}$/.test(choice[0]))){
+      status.textContent="Link de mesa inválido. Peça o endereço à equipe.";return;
+    }
+    const table=choice.length?"?mesa="+encodeURIComponent(choice[0]):"";
+    const response=await fetch("/api/public/menu/"+path[1]+"/"+path[2]+table,{cache:"no-store",signal:AbortSignal.timeout(12000)});
+    if(response.status===404){status.textContent=table?"Este cardápio ou mesa está indisponível. Confirme com a equipe.":"Este cardápio ainda não foi publicado ou está indisponível.";return;}
     if(!response.ok)throw Error("Falha de rede");
     const data=await response.json();
     applyTheme(document.documentElement,data.appearance);
     document.title=data.name+" | Cardápio";
     $("storeTitle").textContent=data.name;$("storeLocation").textContent=data.location.name;
+    const tableBadge=$("tableBadge");tableBadge.hidden=!data.table?.label;tableBadge.textContent=data.table?.label??"";
     records=data.items;restricted=data.limited;selected="";search.value="";
     catalog.hidden=false;categories();render();
   }catch{

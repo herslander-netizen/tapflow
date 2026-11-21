@@ -1,7 +1,7 @@
 name: TapFlow — validação do protótipo
 on:
   pull_request:
-    branches: [main, 'feat/tapflow-integrado-preview-api']
+    branches: [main, 'feat/tapflow-integrado-preview-api', 'feat/tapflow-base-piloto']
     paths:
       - "apps/web/**"
       - "brand/**"

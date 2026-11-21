@@ -13,4 +13,8 @@ await mkdir(join(assets,"vendor"),{recursive:true});
 const source=await readFile(join(packageDir,"dist","auth0-spa-js.production.esm.js"),"utf8");
 await writeFile(join(assets,"vendor","auth0-spa.production.mjs"),source.replace(/\n\/\/# sourceMappingURL=[^\n]+\s*$/,"\n"));
 await cp(join(packageDir,"LICENSE"),join(assets,"vendor","auth0-spa.LICENSE.txt"));
+const qrPackage=join(root,"node_modules","qrcode-generator");
+const qrMeta=JSON.parse(await readFile(join(qrPackage,"package.json"),"utf8"));
+if(qrMeta.version!=="2.0.4")throw Error("Gerador QR inesperado; revise package-lock.json.");
+await cp(join(qrPackage,"dist","qrcode.mjs"),join(assets,"vendor","qrcode-generator.mjs"));
 console.log("Assets isolados do painel prontos; nenhum deploy executado.");
