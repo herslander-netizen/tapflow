@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - "apps/web/**"
+      - "apps/api/**"
+      - "packages/contracts/**"
       - "tests/unit/**"
       - "scripts/**"
       - "package.json"
@@ -22,6 +24,7 @@ jobs:
           node-version: "22"
       - name: Verificar sintaxe da interface
         run: |
+          node --check apps/api/order-service.mjs
           node --check apps/web/app.js
           node --check apps/web/domain.mjs
           node --check apps/web/demo-data.js
