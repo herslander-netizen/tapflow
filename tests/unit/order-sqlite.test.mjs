@@ -15,6 +15,7 @@ function setup(t, { beforeBatch } = {}) {
   const sql = new DatabaseSync(":memory:");
   t.after(() => sql.close());
   sql.exec(schema);
+  sql.exec(sessionsSchema);
   sql.exec(`
     INSERT INTO tenants (id, slug, name, status) VALUES
       ('tenant-a', 'test-a', 'Cozinha fictícia A', 'active'), ('tenant-b', 'test-b', 'Cozinha fictícia B', 'active');
@@ -28,6 +29,8 @@ function setup(t, { beforeBatch } = {}) {
     INSERT INTO menu_addons (id, tenant_id, menu_item_id, name, price_cents) VALUES
       ('addon-a', 'tenant-a', 'item-a', 'Adicional fictício A', 400);
   `);
+  sql.prepare(`INSERT INTO order_sessions(session_hash,tenant_id,location_id,table_id,expires_at_ms)
+    VALUES (?,?,?,?,?)`).run(session.sessionHash, session.tenantId, session.locationId, session.tableId, Date.now()+60000);
   const db = {
     prepare(query) {
       const statement = sql.prepare(query);
@@ -86,7 +89,7 @@ test("SQL canônico: mudança de preço entre cotação e gravação não deixa 
   const { api, counts } = setup(t, {
     beforeBatch: sql => sql.exec("UPDATE menu_items SET price_cents = 3100 WHERE id = 'item-a'"),
   });
-  assert.notEqual((await api()(post())).status, 201);
+  assert.equal((await api()(post())).status, 409);
   assert.deepEqual(counts(), [0, 0, 0, 0]);
 });
 
@@ -113,8 +116,7 @@ test("SQL canônico: item e pedido alheios não vazam através do endpoint", asy
 
 test("sessão opaca e SQL real: revogação bloqueia criação e leitura, sem afetar pedido já gravado", async t => {
   const { db, sql, counts } = setup(t);
-  sql.exec(sessionsSchema);
-  const now = 123000, token = "q".repeat(43);
+  const now = Date.now(), token = "q".repeat(43);
   const hash = createHash("sha256").update(token).digest("hex");
   sql.prepare(`INSERT INTO order_sessions(session_hash,tenant_id,location_id,table_id,expires_at_ms)
     VALUES (?,?,?,?,?)`).run(hash, session.tenantId, session.locationId, session.tableId, now + 60000);
@@ -135,3 +137,14 @@ test("sessão opaca e SQL real: revogação bloqueia criação e leitura, sem af
   }))).status, 401);
   assert.deepEqual(counts(), [1, 1, 1, 1]);
 });
+
+for (const [condition, update] of [
+  ["revogação", "UPDATE order_sessions SET revoked_at_ms=1"],
+  ["expiração", "UPDATE order_sessions SET expires_at_ms=1"],
+]) {
+  test(`SQL canônico: ${condition} depois de autorizar impede gravação atômica`, async t => {
+    const { api, counts } = setup(t, {beforeBatch: sql => sql.exec(update)});
+    assert.equal((await api()(post())).status, 409);
+    assert.deepEqual(counts(), [0, 0, 0, 0]);
+  });
+}
