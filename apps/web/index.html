@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#024519">
+  <meta name="description" content="TapFlow — conheça, escolha e peça. Protótipo demonstrativo da ALVO Digital.">
+  <title>TapFlow — Descubra seu próximo favorito</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./experience.css">
+  <link rel="stylesheet" href="./brand-theme.css">
+  <link rel="stylesheet" href="./theme.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a href="#explorar" class="brand" aria-label="TapFlow — início" data-action="explore">
+        <img class="brand-logo" src="./tapflow-wordmark.svg" alt="TapFlow" width="160" height="45" decoding="async">
+      </a>
+      <div class="topbar-context">
+        <span class="demo-tag"><span class="demo-pulse"></span> DEMONSTRAÇÃO</span>
+        <span class="table-indicator" id="tableIndicator">Mesa 08</span>
+      </div>
+      <button type="button" class="icon-button header-help" data-action="help" aria-label="Informações sobre a demonstração">?</button>
+    </header>
+
+    <aside class="sidebar" aria-label="Navegação lateral">
+      <div class="eyebrow">SUA EXPERIÊNCIA</div>
+      <h1>O sabor começa <em>por aqui.</em></h1>
+      <p class="sidebar-intro">Descubra os pratos, escolha seus favoritos e faça um pedido de teste em poucos toques.</p>
+      <div class="side-divider"></div>
+      <nav id="sideNav" class="side-nav" aria-label="Seções"></nav>
+      <div class="sidebar-bottom">
+        <span class="eyebrow">RESTAURANTE DEMO</span>
+        <div class="restaurant-mini"><span class="restaurant-avatar">S.</span><span><strong>Studio Sabor</strong><small>Cardápio ilustrativo</small></span></div>
+        <p>Experiência criada pela <strong>ALVO Digital</strong>.</p>
+      </div>
+    </aside>
+
+    <main id="mainArea" class="main-area">
+      <div id="mainContent" class="main-content" aria-live="polite"></div>
+    </main>
+
+    <aside class="rightbar" aria-label="Resumo do pedido">
+      <div class="right-heading">
+        <span class="eyebrow">SEU MOMENTO</span>
+        <h2>Peça o que te dá vontade.</h2>
+      </div>
+      <div id="rightContent"></div>
+    </aside>
+
+    <nav class="bottom-nav" id="bottomNav" aria-label="Navegação principal"></nav>
+  </div>
+
+  <div id="drawerRoot"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./theme-panel.mjs"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {brl,quantity,unitPrice,cartLine,cartTotal,nextOrderStatus} from "../../apps/web/domain.mjs";
+const item={id:"test",name:"Prato",price:3890,image:"",emoji:"🍔",available:true,addons:[{id:"x",name:"Queijo",price:490},{id:"y",name:"Molho",price:290}]};
+test("preços em centavos e extras únicos",()=>{assert.equal(unitPrice(item,["x","x","y"]),4670);assert.equal(brl(4670).includes("46,70"),true);});
+test("quantidade fora da faixa é rejeitada",()=>{assert.throws(()=>quantity(0));assert.throws(()=>quantity(11));assert.equal(quantity("2"),2);});
+test("carrinho calcula a soma correta",()=>{const a=cartLine(item,["x"],2,"sem cebola");const b=cartLine(item,[],1);assert.equal(a.total,8760);assert.equal(cartTotal([a,b]),12650);});
+test("produto esgotado não entra no carrinho",()=>assert.throws(()=>cartLine({...item,available:false},[],1)));
+test("adicional não cadastrado é rejeitado",()=>assert.throws(()=>unitPrice(item,["desconhecido"])));
+test("chave de carrinho normaliza adicionais",()=>assert.equal(cartLine(item,["y","x"],1).key,cartLine(item,["x","y"],1).key));
+test("somente transições de pedido permitidas",()=>{assert.equal(nextOrderStatus("submitted","accepted"),"accepted");assert.equal(nextOrderStatus("accepted","preparing"),"preparing");assert.throws(()=>nextOrderStatus("submitted","paid"));assert.throws(()=>nextOrderStatus("completed","preparing"));});

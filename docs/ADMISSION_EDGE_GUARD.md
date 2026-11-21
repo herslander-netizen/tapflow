@@ -1,0 +1,13 @@
+# Trava de tentativas de admissão de mesa
+
+Artefato aditivo baseado no PR #7 de TapFlow (`743b2df6165917a6b048555864e5ddc9825ecdd1`).
+Não cria endpoint, binding hospedado, segredo, migração, escrita ou publicação.
+Alvos de integração ficam desligados até autenticação de equipe e teste em prévia isolada.
+
+- **Entrada de emissão e resgate:** o futuro Worker chama `ingress(action, metadata)` antes de ler o corpo, validar a credencial ou consultar D1. A origem e endereço são decididos no servidor em ingresso Cloudflare direto e auditado; nunca copie `source` ou `address` do JSON, query, X-Forwarded-For ou caminho que possa alterar proxy/header. A marca `cloudflare-verified-ingress` nesta interface é um contrato interno, não prova criptográfica de proveniência. Não habilite em rotas com outro Worker ou proxy até verificar essa cadeia.
+- **Emissão autenticada:** a saída real de `authorizeStaff(ctx, "issue_table_admission")` de `apps/api/order-admission.mjs` passa por `staffIssue`, antes de emitir. Não reimplemente a permissão no cliente; o ID da mesa é seletor e não é chave de identidade. Autorização do operador, escopo da mesa, cotas por mesa e gravação atômica no D1 continuam obrigatórias.
+- **Não habilitar em falha:** duas bindings `limit({key})` de prévia com namespaces Cloudflare distintos, injetadas pelo servidor; chave HMAC-SHA-256 não exportável, gerada e fornecida como segredo próprio de prévia somente numa ativação aprovada. Ausência/erro da borda/resultado malformado → indisponível (503), limite negado → 429, staff sem permissão → 403; não chamar o comando D1 em qualquer bloqueio. Não retornar nem logar chave, endereço, identidade, cabeçalho, código ou erro bruto. O digest é pseudônimo, não anonimização.
+- **Sem contagem global exata:** a [Cloudflare Rate Limiting API](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) conta de forma aproximada por localização. Bucket de endereço é só freio grosseiro para tentativas pré-auth, compartilhado por usuários atrás de NAT e contornável por rotação; não substitui identidade de operador, quotas atômicas no D1, consumo único, expiração e revogação. Avalie limites/falsos bloqueios e custo em prévia antes de habilitar.
+- **Aceite adicional ao plugar:** confirmar que uma negativa ocorre antes de ler corpo/consultar D1, que estados 403/429/503 não liberam o fluxo e que o painel apresenta bloqueio/indisponibilidade sem revelar se um código existe. Manter testes D1 locais e não expor endpoints de piloto para pedido real.
+
+Teste local (sem npm, sem Cloudflare e sem segredos de verdade): `node --test tests/unit/admission-attempt-guard.test.mjs`.

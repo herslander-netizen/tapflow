@@ -6,10 +6,11 @@ Plataforma SaaS independente de cardápio interativo em formato Reels, acessíve
 
 ## Situação
 
-Este repositório contém o **kit de planejamento e arranque**, não uma aplicação funcional nem uma publicação online. Não há banco criado, deploy, serviço pago ou checkout real.
+Este repositório contém a demonstração Reels e o **piloto de estabelecimento**: cadastro assistido, catálogo e publicação da aparência via D1. O piloto fica fechado por padrão e não muda a demonstração pública existente. Não há checkout real.
 
 ## Documentos para começar
 
+- [Piloto de estabelecimento: cadastro, aparência e publicação](docs/PILOTO_ESTABELECIMENTO.md)
 - [Documento mestre (PRD)](docs/PRD.md)
 - [Pesquisa de concorrentes, open source e roadmap — 21/11/2026](docs/PESQUISA_ESTRATEGICA_2026.md)
 - [Decisões propostas de arquitetura — ADR-001](docs/ADR_STACK_001.md)
@@ -22,7 +23,7 @@ Este repositório contém o **kit de planejamento e arranque**, não uma aplica�
 
 ```text
 apps/web/                   interface do consumidor e estabelecimento
-apps/api/                   backend e endpoints (futuro)
+apps/api/                   backend e endpoints piloto
 packages/ui/                componentes e design tokens
 packages/domain/            regras e invariantes do negócio
 packages/contracts/         contratos e esquemas de validação
@@ -47,4 +48,26 @@ Leia `docs/PRD.md` e execute apenas o escopo permitido em `docs/PROMPT_CODEX_FAS
 
 ---
 
-**Proprietária:** ALVO Digital · **Status:** documentação inicial · **Sem vínculo com a KAIRÓS Produtora**
+**Proprietária:** ALVO Digital · **Status:** piloto em validação · **Sem vínculo com a KAIRÓS Produtora**
+
+## Demonstração interativa (branch de desenvolvimento)
+
+A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a partir da raiz (Node 22+) e abra `http://127.0.0.1:4173`.
+O comando `npm test` valida regras locais de preços, adicionais e estados; mais informações em [docs/PROTOTIPO_DEMO.md](docs/PROTOTIPO_DEMO.md).
+
+**Atenção:** fotos, pedidos, preços e cozinha são demonstrativos. Nenhuma integração real de pagamento, NFC, QR, banco ou restaurante foi ativada.
+
+
+### Mídia de demonstração
+
+O Burger da Brasa possui um clipe WebM com licença CC BY 4.0 e atribuição. Reproduz mudo apenas quando permitido e tem foto de fallback. Leia [Mídias de demonstração](docs/MIDIAS_DEMO.md). Ainda não há infraestrutura de vídeo do TapFlow.
+
+
+### Reproduzir o Worker demonstrativo
+
+Execute `npm run build:preview` para gerar `.build/tapflow-preview-worker.mjs` a partir de `apps/web` sem acessar a rede, sem segredos e **sem publicar**. O preview na Cloudflare usa binding D1 `DB`, na conta exclusiva TapFlow; a configuração está no PR #5. Essa embalagem do frontend é temporária e será substituída por Workers Static Assets.
+
+
+## Infraestrutura Free e agentes (integração em revisão)
+
+Esta branch combina o protótipo Reels do PR #4 com os arquivos da infraestrutura do PR #5. Consulte [integração beta](docs/INTEGRACAO_BETA.md) e [inventário gratuito](infra/free-stack/README.md). O Worker de prévia em `apps/api/preview-worker.mjs` está fechado para pedidos reais; pagamentos e WhatsApp não estão habilitados. Nenhum deploy é feito automaticamente.
