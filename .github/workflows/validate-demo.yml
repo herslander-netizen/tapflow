@@ -31,7 +31,11 @@ jobs:
           node --check apps/web/domain.mjs
           node --check apps/web/demo-data.js
           node --check apps/web/media.mjs
+          node --check apps/web/theme.mjs
+          node --check apps/web/theme-panel.mjs
           node --check scripts/serve.mjs
           node --check scripts/build-preview-worker.mjs
       - name: Testes unitários (sem dependências e sem deploy)
         run: npm test
+      - name: Build da prévia (sem publicação)
+        run: npm run build:preview
