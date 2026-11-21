@@ -42,7 +42,12 @@
       "aiSecretStatus": "no-secrets-configured-manual-dashboard-step",
       "aiRequestsMaxPerUTCday": 5,
       "aiIntegrationStatus": "private-route-deployed-locked",
-      "aiQuotaTableApplied": true
+      "aiQuotaTableApplied": true,
+      "evolutionStatus": "project-provisioned-pairing-required",
+      "evolutionProjectSlug": "tapflow",
+      "evolutionWhatsAppConnected": false,
+      "evolutionSendEnabled": false,
+      "evolutionAdapterDeployed": false
     },
     "production": {
       "configured": false,

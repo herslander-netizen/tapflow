@@ -43,3 +43,8 @@ Fontes: https://developers.cloudflare.com/d1/platform/pricing/ · https://develo
 
 
 **21/11/2026 — IA administrativa:** rota protegida POST /api/admin/ai/description implantada manualmente no Worker de prévia, D1 ai_daily_usage aplicado e verificado, 5 tentativas/dia. A Cloudflare confirmou nenhum secret configurado — o endpoint permanece inacessível sem segredo administrativo e chave Gemini. CI agora também verifica GET=405 e POST não autenticado=401. A versão do Worker que o PR #4 gera não inclui essa rota; **não fazer novo deploy do build do PR #4 diretamente**, até consolidarmos as duas branches e os respectivos módulos.
+
+
+## WhatsApp — Evolution Alvo
+
+Projeto TapFlow foi cadastrado na Evolution Alvo. O adaptador e seus testes estão em [evolution-alvo.mjs](evolution-alvo.mjs) e a instalação/pareamento em [EVOLUTION_ALVO.md](EVOLUTION_ALVO.md). Sem token, pareamento e autorização backend, envio permanece desligado.
