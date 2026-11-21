@@ -1,0 +1,39 @@
+#kitchen-view {color-scheme:dark;--bg:#0f1010;--card:#1b1e1b;--text:#f4f7f1;--muted:#c0c9bd;--line:#6f786c;--accent:#ccff33;--danger:#ffd6d3;font:16px/1.5 system-ui,sans-serif}
+#kitchen-view *,#kitchen-view *::before,#kitchen-view *::after {box-sizing:border-box}
+#kitchen-view [hidden] {display:none!important}
+body.kitchen-page {margin:0;background:#0f1010;color:#f4f7f1}
+#kitchen-view {color:var(--text)}
+#kitchen-view a {color:var(--accent)}
+#kitchen-view :focus-visible {outline:3px solid var(--accent);outline-offset:3px}
+#kitchen-view .skip {position:absolute;top:-6rem;left:1rem;padding:.7rem;background:var(--bg);z-index:1}
+#kitchen-view .skip:focus {top:1rem}
+#kitchen-view .top {display:flex;align-items:center;justify-content:space-between;gap:.7rem;padding:.65rem max(1rem,calc((100vw - 960px)/2));min-height:64px;border-bottom:1px solid var(--line)}
+#kitchen-view .top a {display:grid;place-items:center;min-height:44px}
+#kitchen-view .top img {max-width:100%;height:auto}
+#kitchen-view main {width:min(100%,960px);margin:auto;padding:1.25rem 1rem 4rem}
+#kitchen-view p {margin:.3rem 0 .9rem;color:var(--muted)}
+#kitchen-view h1,#kitchen-view h2,#kitchen-view h3 {margin:0 0 .5rem;line-height:1.16}
+#kitchen-view h1 {font-size:clamp(2rem,7vw,3.4rem);letter-spacing:-.04em}
+#kitchen-view h2 {font-size:1.35rem}
+#kitchen-view h3 {font-size:1.1rem}
+#kitchen-view .eyebrow {font-size:.75rem;color:var(--accent);font-weight:800;letter-spacing:.14em}
+#kitchen-view .notice,#kitchen-view .feedback:not(:empty),#kitchen-view .error {border:1px solid var(--line);border-radius:12px;padding:.6rem .8rem;overflow-wrap:anywhere}
+#kitchen-view .error {border-color:var(--danger);color:var(--danger)}
+#kitchen-view .scope,#kitchen-view .order {border:1px solid var(--line);background:var(--card);border-radius:16px;padding:.9rem;min-width:0}
+#kitchen-view .scope {display:grid;gap:.5rem;margin-bottom:1.1rem}
+#kitchen-view label {font-weight:650}
+#kitchen-view button,#kitchen-view select {min-height:44px;width:100%;padding:.5rem .65rem;font:inherit;border-radius:8px;border:1px solid var(--line)}
+#kitchen-view select {background:var(--bg);color:var(--text)}
+#kitchen-view button {color:#11190b;background:var(--accent);font-weight:750;cursor:pointer;border-color:transparent}
+#kitchen-view button.alt {background:transparent;color:var(--text);border:1px solid var(--line)}
+#kitchen-view button:disabled,#kitchen-view select:disabled {opacity:.65;cursor:not-allowed}
+#kitchen-view .orders {padding:0;list-style:none;margin:.8rem 0 0;display:grid;gap:.75rem}
+#kitchen-view .order h3,#kitchen-view .order li,#kitchen-view .order p {overflow-wrap:anywhere}
+#kitchen-view .order header {display:flex;justify-content:space-between;align-items:flex-start;gap:.65rem;flex-wrap:wrap}
+#kitchen-view .badge {border:1px solid var(--line);padding:.2rem .55rem;border-radius:100px;color:var(--accent);font-size:.85rem;font-weight:750}
+#kitchen-view .items {margin:.65rem 0;padding-left:1.3rem}
+#kitchen-view .items li {margin:.25rem 0}
+#kitchen-view .items p {margin:0}
+#kitchen-view .actions {display:grid;gap:.45rem;margin-top:.85rem}
+@media(min-width:740px) {#kitchen-view .orders {grid-template-columns:repeat(2,minmax(0,1fr))}#kitchen-view .scope {max-width:460px}}
+#kitchen-view .actions textarea {width:100%;min-height:60px;padding:.5rem .65rem;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical}

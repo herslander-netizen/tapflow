@@ -12,6 +12,7 @@
     "build:merchant-preview": "node scripts/build-merchant-preview.mjs"
   },
   "devDependencies": {
-    "@auth0/auth0-spa-js": "2.30.0"
+    "@auth0/auth0-spa-js": "2.30.0",
+    "qrcode-generator": "2.0.4"
   }
 }

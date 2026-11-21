@@ -42,3 +42,41 @@ test("aplicar tokens aceita apenas entradas derivadas pelo motor", () => {
   assert.equal(root.dataset.tapflowAppearance,"light");
   assert.equal(props.get("--accent"), outcome.effectiveAccent);
 });
+
+test("pares de tokens mantêm contraste nas superfícies realmente usadas", () => {
+  const pairs = [
+    ["--text", "--bg", 4.5],
+    ["--muted", "--bg", 4.5],
+    ["--on-input", "--surface-input", 4.5],
+    ["--on-surface", "--surface-card", 4.5],
+    ["--on-accent", "--accent", 4.5],
+    ["--focus", "--bg", 3],
+    ["--focus-on-input", "--surface-input", 3],
+    ["--control-border", "--bg", 3],
+    ["--muted-on-surface", "--surface-card", 4.5],
+    ["--focus-on-surface", "--surface-card", 3]
+  ];
+  const overrides = [
+    {},
+    { background: "#757575", accent: "#B6E229" },
+    { background: "#808080", accent: "#808080" },
+    { background: "#000000", accent: "#000000" },
+    { background: "#FFFFFF", accent: "#FFFFFF" }
+  ];
+  for (const preset of Object.keys(THEME_PRESETS)) {
+    for (const mode of ["light", "dark"]) {
+      for (const override of overrides) {
+        const settings = { preset, mode, ...override };
+        const { tokens, settings: normalized } = createTheme(settings);
+        assert.deepEqual(normalized, { preset, mode, background: null, accent: null, ...override });
+        for (const [foreground, background, minimum] of pairs) {
+          const context = JSON.stringify(settings) + " " + foreground + "/" + background;
+          assert.ok(isHex(tokens[foreground]), context + " primeiro token hex ausente");
+          assert.ok(isHex(tokens[background]), context + " segundo token hex ausente");
+          const ratio = contrastRatio(tokens[foreground], tokens[background]);
+          assert.ok(ratio >= minimum, context + " " + ratio.toFixed(3) + ":" + "1 < " + minimum + ":1");
+        }
+      }
+    }
+  }
+});

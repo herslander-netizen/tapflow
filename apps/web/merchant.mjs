@@ -1,3 +1,4 @@
+import { tableMenuLink,downloadTableQr } from "./table-qr.mjs";
 import { loadMerchantSession } from "./merchant-auth0.mjs";
 import { DEFAULT_SETTINGS, THEME_PRESETS, createTheme, normalizeSettings } from "./theme.mjs";
 
@@ -41,7 +42,7 @@ export function mountMerchant({
   const loopback = !inject && sessionHosts.has(hostname);
   const state = { token: null, tenantId: "", tenantSlug: "", locationId: "", busy: false, appearance: null, appearanceDirty: false };
   let tenantRecords = [];
-  let catalog = { locations: [], categories: [], items: [], addons: [] };
+  let catalog = { locations: [], tables: [], categories: [], items: [], addons: [] };
 
   function say(message) { $("merchant-status").textContent = message; }
   function showError(message = "") {
@@ -81,9 +82,10 @@ export function mountMerchant({
   function updateControls() {
     panel.setAttribute("aria-busy", String(state.busy));
     for (const field of panel.querySelectorAll("button, input, select, textarea")) {
+      if(field.closest("#kitchen-view"))continue;
       const section = field.closest("section")?.id;
       const needsTenant = section !== "estabelecimento" && section;
-      const needsLocation = ["categorias", "itens", "adicionais"].includes(section);
+      const needsLocation = ["mesas", "categorias", "itens", "adicionais"].includes(section);
       const needsAppearance = section === "aparencia" && !state.appearance;
       field.disabled = Boolean(state.busy || (needsTenant && !state.tenantId) ||
         (needsLocation && !state.locationId) || needsAppearance ||
@@ -106,6 +108,40 @@ export function mountMerchant({
       ul.children[ix].append(" · ", a);
     });
   }
+  function renderTableLinks(){
+    const ul=$("table-list");
+    const shown=catalog.tables.filter(row=>row?.locationId===state.locationId&&typeof row.name==="string");
+    entries("table-list",shown,row=>row.name+(row.isActive?"":" · link desativado"));
+    for(const [i,row] of shown.entries()){
+      if(!row.isActive||!/^[A-Za-z0-9_-]{1,64}$/.test(row.id))continue;
+      const item=ul.children[i];
+      const url=tableMenuLink(origin,state.tenantSlug,state.locationId,row.id);
+      if(state.appearance?.published&&url){
+        const a=doc.createElement("a");a.href=url.href;a.target="_blank";a.rel="noopener noreferrer";a.textContent="Abrir link da mesa";
+        const copy=doc.createElement("button");copy.type="button";copy.className="secondary";copy.textContent="Copiar link";
+        copy.addEventListener("click",async()=>{
+          try{await doc.defaultView.navigator.clipboard.writeText(url.href);say("Link da mesa copiado.");}
+          catch{showError("Não consegui copiar. Abra o link e copie pela barra de endereço.");}
+        });
+        const qr=doc.createElement("button");qr.type="button";qr.className="secondary";qr.textContent="Baixar QR Code";
+        qr.addEventListener("click",async()=>{
+          if(qr.disabled)return;
+          qr.disabled=true;
+          try{if(await downloadTableQr({document:doc,url,stillCurrent:()=>item.isConnected&&!panel.hidden}))
+            say("QR Code pronto para impressão.");}
+          catch{if(item.isConnected)showError("Não consegui gerar o QR Code. O link da mesa ainda pode ser copiado.");}
+          finally{if(item.isConnected)qr.disabled=false;}
+        });
+        item.append(" · ",a," ",copy," ",qr);
+      }
+      const revoke=doc.createElement("button");revoke.type="button";revoke.className="secondary";revoke.textContent="Desativar link";
+      revoke.addEventListener("click",()=>{
+        if(!doc.defaultView.confirm("Desativar este link de mesa? Etiquetas e QR Codes impressos com ele vão parar de funcionar."))return;
+        void run(async()=>{await api(`${tenantPath()}/tables/${pathId(row.id)}`,"PATCH",{locationId:row.locationId,isActive:false});await loadCatalog();say("Link da mesa desativado.");});
+      });
+      item.append(" ",revoke);
+    }
+  }
   function renderCatalog() {
     const activeLocations=catalog.locations.filter(row=>row.status==="active");
     options($("location-scope"),activeLocations,state.locationId||(activeLocations.length===1?activeLocations[0].id:""));
@@ -117,7 +153,7 @@ export function mountMerchant({
     const addons = catalog.addons.filter((row) => itemIds.has(row?.itemId));
     options($("item-category"), categories);
     options($("addon-item"), items);
-    renderLocationLinks();
+    renderLocationLinks();renderTableLinks();
     entries("category-list", categories, (x) => x.name);
     const cost = (x) => Number.isSafeInteger(x.priceCents) ? ` · ${currency.format(x.priceCents / 100)}` : "";
     entries("item-list", items, (x) => x.name + cost(x));
@@ -152,7 +188,7 @@ export function mountMerchant({
       ? `Revisão ${state.appearance.revision} · ${state.appearance.published ? "Há aparência publicada." : "Ainda não publicada."}`
       : "Rascunho indisponível. Atualize o estabelecimento.";
     previewAppearance(draft);
-    renderLocationLinks();
+    renderLocationLinks();renderTableLinks();
     updateControls();
   }
   async function api(path, method = "GET", data) {
@@ -192,7 +228,7 @@ export function mountMerchant({
   }
   const tenantPath = () => `${catalogBase}/${pathId(state.tenantId)}`;
   async function loadCatalog() {
-    catalog = { locations: [], categories: [], items: [], addons: [] };
+    catalog = { locations: [], tables: [], categories: [], items: [], addons: [] };
     if (state.tenantId) {
       const data = await api(`${tenantPath()}/catalog`);
       catalog = Object.fromEntries(Object.keys(catalog).map((key) => [key, list(data[key])]));
@@ -217,7 +253,7 @@ export function mountMerchant({
     state.locationId = "";
     state.appearance = null;
     state.appearanceDirty = false;
-    catalog = { locations: [], categories: [], items: [], addons: [] };
+    catalog = { locations: [], tables: [], categories: [], items: [], addons: [] };
     renderCatalog();
     renderAppearance();
     await loadCatalog();
@@ -270,6 +306,7 @@ export function mountMerchant({
     catch { say(`${label} salvo. Atualize o estabelecimento para carregar a lista; não repita o cadastro.`); }
   });
   createRecord("form-location", "locations", (f) => ({ name: value(f, "name") }), "Cadastro da unidade");
+  createRecord("form-table","tables",(f)=>({locationId:state.locationId,name:value(f,"name")}),"Cadastro da mesa");
   createRecord("form-category", "categories", (f) => ({
     locationId: state.locationId, name: value(f, "name"),
   }), "Cadastro da categoria");
@@ -358,7 +395,22 @@ export function mountMerchant({
 
 if (typeof window !== "undefined") {
   // Do not accept an injected browser global in the hosted build.
-  void loadMerchantSession().then(({managed,getAccessToken})=>{
+  void loadMerchantSession().then(async({managed,getAccessToken,kitchenEnabled})=>{
     if(!managed||getAccessToken)mountMerchant({getAccessToken});
+    if(!kitchenEnabled||!getAccessToken)return;
+    const view=document.getElementById("kitchen-view"),nav=document.getElementById("kitchen-nav");
+    let dispose=null, closed=false;
+    document.addEventListener("tapflow-merchant-signed-out",()=>{
+      closed=true;dispose?.();view.hidden=true;nav.hidden=true;
+    },{once:true});
+    try{
+      const {mountKitchen}=await import("./kitchen.mjs");
+      if(closed)return;
+      dispose=mountKitchen({root:view,getAccessToken});
+      if(typeof dispose==="function"){view.hidden=false;nav.hidden=false;}
+    }catch{
+      const status=document.getElementById("merchant-status");
+      if(!closed&&status)status.textContent="Não foi possível carregar a cozinha. O cadastro continua disponível.";
+    }
   });
 }

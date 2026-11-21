@@ -83,6 +83,7 @@ async function catalog(db,t,user) {
   const args=ownerArgs(t,user);
   const statements=[
     ["locations","SELECT id,name,status FROM locations WHERE tenant_id=?","name,id"],
+    ["tables","SELECT id,location_id AS locationId,label AS name,is_active AS isActive FROM dining_tables WHERE tenant_id=?","location_id,label,id"],
     ["categories",`SELECT id,location_id AS locationId,name,sort_order AS sortOrder,is_active AS isActive
       FROM menu_categories WHERE tenant_id=?`,"location_id,sort_order,name,id"],
     ["items",`SELECT i.id,i.location_id AS locationId,c.category_id AS categoryId,i.name,i.description,
@@ -101,11 +102,42 @@ async function catalog(db,t,user) {
   if(rows(result[0]).length!==1)return error(404,"not_found");
   if(result.slice(1).some(r=>rows(r).length>CATALOG_LIMIT))return error(409,"catalog_limit_exceeded");
   return respond(Object.fromEntries(statements.map(([field],index)=>[field,rows(result[index+1]).map(row=>({
-    ...row,...(field==="categories"?{isActive:row.isActive===1}:field==="addons"?{isAvailable:row.isAvailable===1}:{})
+    ...row,...((field==="categories"||field==="tables")?{isActive:row.isActive===1}:field==="addons"?{isAvailable:row.isAvailable===1}:{})
   }))])));
 }
 
+// IDs in QR/NFC URLs are public menu selectors, never ordering credentials.
+async function writeTable(db,t,user,key,b){
+  const loc=b.locationId;
+  if(!isId(loc))return error(400,"invalid_data");
+  const permission=`${OWNER} AND ${UNIT}`, scope=[...ownerArgs(t,user),t,loc];
+  if(key){
+    if(!only(b,"locationId","isActive")||b.isActive!==false)return error(400,"invalid_data");
+    const [result]=await db.batch([sql(db,`UPDATE dining_tables SET is_active=0
+      WHERE tenant_id=? AND location_id=? AND id=? AND ${permission}`,t,loc,key,...scope)]);
+    if(result.success!==true)return error(503,"merchant_unavailable");
+    return changes(result)===1?respond({id:key,isActive:false}):error(404,"not_found");
+  }
+  if(!only(b,"locationId","name")||!isText(b.name,48))return error(400,"invalid_data");
+  const label=b.name.trim();
+  const candidate=crypto.randomUUID();
+  const [create,read]=await db.batch([
+    sql(db,`INSERT INTO dining_tables(id,tenant_id,location_id,label,is_active)
+      SELECT ?,?,?,?,1 WHERE ${permission}
+      ON CONFLICT(tenant_id,location_id,label) DO NOTHING`,candidate,t,loc,label,...scope),
+    sql(db,`SELECT id,is_active AS isActive FROM dining_tables
+      WHERE tenant_id=? AND location_id=? AND label=? AND ${permission}`,t,loc,label,...scope)
+  ]);
+  if(create.success!==true||read.success!==true)return error(503,"merchant_unavailable");
+  const row=read.results?.[0];
+  if(!row)return error(404,"not_found");
+  // Never reactivate a disabled QR identifier via the create path.
+  if(row.isActive!==1)return error(409,"table_label_retired");
+  return respond({id:row.id,isActive:true},changes(create)===1?201:200);
+}
+
 async function write(db,t,user,kind,key,b) {
+  if(kind==="tables")return writeTable(db,t,user,key,b);
   const args=ownerArgs(t,user);
   const id=key||crypto.randomUUID(), editing=Boolean(key);
   const loc=b.locationId, item=b.itemId, cat=b.categoryId??null;
@@ -189,7 +221,7 @@ export function createMerchantAdmin({
     const [t,kind,key]=parts;
     const root=parts.length===0&&["GET","POST"].includes(method);
     const read=parts.length===2&&isId(t)&&kind==="catalog"&&method==="GET";
-    const writeRoute=isId(t)&&["locations","categories","items","addons"].includes(kind)&&
+    const writeRoute=isId(t)&&["locations","tables","categories","items","addons"].includes(kind)&&
       ((parts.length===2&&method==="POST")||(parts.length===3&&isId(key)&&method==="PATCH"));
     if(!root&&!read&&!writeRoute)return error(404,"not_found");
     let user;

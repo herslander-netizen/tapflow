@@ -54,7 +54,7 @@ export async function startMerchantLogin({
     };
     if(!await getAccessToken()) return {managed:true};
     ui.signedIn(true);
-    return {managed:true,getAccessToken};
+    return {managed:true,getAccessToken,...(config.kitchenEnabled===true?{kitchenEnabled:true}:{})};
   }catch{
     ui.feedback("Não foi possível concluir o login. Volte e tente novamente.");
     // An explicitly configured hosted provider never falls back to manual credentials.
@@ -87,7 +87,10 @@ export async function loadMerchantSession(){
       signedIn:yes=>{
         document.getElementById("merchant-signin").hidden=yes;
         document.getElementById("merchant-signout").hidden=!yes;
-        if(!yes)document.getElementById("panel").hidden=true;
+        if(!yes){
+          document.getElementById("panel").hidden=true;
+          document.dispatchEvent(new Event("tapflow-merchant-signed-out"));
+        }
       }
     }
   });

@@ -20,8 +20,9 @@ function mintStaffToken(subject){
 const modules = [
   { type: "ESModule", path: "local-order-worker.mjs", contents: `
     import { createTableOrderRouter } from "./apps/api/table-order-router.mjs";
+    import { createMerchantKitchen } from "./apps/api/merchant-kitchen.mjs";
     import { createAdmissionAttemptGuard } from "./apps/api/admission-attempt-guard.mjs";
-    import { createStaffIdentityAuthorizer,createD1StaffMembershipRepository } from "./apps/api/staff-identity.mjs";
+    import { createVerifiedStaffIdentity,createStaffIdentityAuthorizer,createD1StaffMembershipRepository } from "./apps/api/staff-identity.mjs";
     export default { async fetch(request, env) {
       const key = await crypto.subtle.importKey("raw",new Uint8Array(32).fill(4),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
       const issueLimiter = {limit:async()=>({success:true})};
@@ -38,20 +39,25 @@ const modules = [
           findActiveMembership:createD1StaffMembershipRepository(env.DB)
         })
       });
-      return await localRoute(request) ?? new Response(null,{status:404});
+      const kitchen = createMerchantKitchen({
+        db:env.DB, enabled:true, origin:"http://localhost",
+        verifyIdentity:createVerifiedStaffIdentity({enabled:true,issuer:env.STAFF_ISSUER,audience:env.STAFF_AUDIENCE,
+          getVerificationKey:async kid=>kid==="local"?staffKey:null})
+      });
+      return await kitchen(request) ?? await localRoute(request) ?? new Response(null,{status:404});
     } };` },
-  ...await Promise.all(["apps/api/order-service.mjs","apps/api/order-session.mjs","apps/api/order-admission.mjs","apps/api/order-tracking.mjs","apps/api/table-order-router.mjs","apps/api/admission-attempt-guard.mjs","apps/api/staff-identity.mjs","packages/contracts/order.mjs"]
+  ...await Promise.all(["apps/api/order-service.mjs","apps/api/order-session.mjs","apps/api/order-admission.mjs","apps/api/order-tracking.mjs","apps/api/table-order-router.mjs","apps/api/admission-attempt-guard.mjs","apps/api/staff-identity.mjs","apps/api/merchant-kitchen.mjs","packages/contracts/order.mjs"]
     .map(async path => ({type:"ESModule",path,contents:await get(path)}))),
 ];
 const mf = new Miniflare({modules, compatibilityDate:"2026-08-06", d1Databases:{DB:"tapflow-local-qa-only"}, d1Persist:false, bindings:{STAFF_PUBLIC_KEY:publicKey.export({format:"jwk"}),STAFF_ISSUER:issuer,STAFF_AUDIENCE:audience}, telemetry:{enabled:false}});
 try {
   const db = await mf.getD1Database("DB");
-  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql", "infra/free-stack/d1/0005_order_admission_issue_index.sql", "infra/free-stack/d1/0006_order_tracking_tokens.sql","infra/free-stack/d1/0007_order_staff_memberships.sql"]) {
+  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql", "infra/free-stack/d1/0005_order_admission_issue_index.sql", "infra/free-stack/d1/0006_order_tracking_tokens.sql","infra/free-stack/d1/0007_order_staff_memberships.sql","infra/free-stack/d1/0010_merchant_kitchen.sql"]) {
     const sql = (await get(path)).split("\n").filter(line => !/^\s*--|^\s*PRAGMA/.test(line)).join("\n");
-    const triggerAt=sql.indexOf("CREATE TRIGGER");
-    const plain=triggerAt<0?sql:sql.slice(0,triggerAt);
-    for (const statement of plain.split(";").map(s => s.trim()).filter(Boolean)) await db.prepare(statement).run();
-    if(triggerAt>=0) await db.prepare(sql.slice(triggerAt).trim()).run();
+    const triggers=[];
+    const plain=sql.replace(/CREATE TRIGGER.*?\nEND;/gis,part=>{triggers.push(part);return "";});
+    for(const statement of plain.split(";").map(s=>s.trim()).filter(Boolean).concat(triggers))
+      await db.prepare(statement).run();
   }
   await db.batch([
     db.prepare("INSERT INTO tenants(id,slug,name,status) VALUES ('ta','qa','Fictício A','active'),('tb','qb','Fictício B','active')"),
@@ -152,7 +158,35 @@ try {
   await db.prepare("UPDATE order_sessions SET revoked_at_ms = ? WHERE session_hash = ?").bind(now,main.hash).run();
   assert.equal((await call(status,main.token)).status,401);
   assert.equal((await call("/v1/orders",main.token,cart,"miniflare-order-test-2")).status,401);
-  for(const table of ["orders","order_lines","order_events","order_idempotency"])
+  await db.batch([
+    db.prepare("INSERT INTO order_staff_memberships(staff_id,issuer,subject,tenant_id,location_id,role,status) VALUES (?,?,?,?,?,?,?)")
+      .bind("staff-kitchen",issuer,"fixture-kitchen","ta","la","manager","active"),
+    db.prepare("INSERT INTO order_staff_memberships(staff_id,issuer,subject,tenant_id,location_id,role,status) VALUES (?,?,?,?,?,?,?)")
+      .bind("other-kitchen",issuer,"fixture-other-kitchen","tb","lb","manager","active")
+  ]);
+  const kitchenToken=mintStaffToken("fixture-kitchen");
+  const location="/v1/merchant/kitchen/ta/la/orders";
+  const kitchenOrder=location+"/"+id;
+  assert.equal((await call(kitchenOrder,mintStaffToken("fixture-other-kitchen"))).status,404);
+  const pending=await call(location,kitchenToken);
+  assert.equal(pending.status,200);
+  assert.equal((await pending.json()).orders.some(order=>order.id===id&&order.status==="submitted"),true);
+  const kitchenDetail=await call(kitchenOrder,kitchenToken);
+  assert.equal(kitchenDetail.status,200);
+  assert.equal((await kitchenDetail.json()).order.lines[0].quantity,2);
+  const move=(expectedStatus,status)=>call(kitchenOrder+"/transition",kitchenToken,{expectedStatus,status});
+  assert.equal((await move("submitted","ready")).status,409);
+  const first=await Promise.all([move("submitted","accepted"),move("submitted","accepted")]);
+  assert.deepEqual(first.map(r=>r.status).sort(),[200,409]);
+  for(const [from,to] of [["accepted","preparing"],["preparing","ready"],["ready","completed"]]){
+    const outcome=await move(from,to);
+    assert.equal(outcome.status,200);
+    assert.equal((await outcome.json()).status,to);
+  }
+  assert.equal((await (await call(trackPath,trackGrant.token)).json()).status,"completed");
+  assert.equal(await db.prepare("SELECT count(*) AS n FROM merchant_kitchen_transitions").first("n"),4);
+  assert.equal(await db.prepare("SELECT count(*) AS n FROM order_events").first("n"),5);
+  for(const table of ["orders","order_lines","order_idempotency"])
     assert.equal(await db.prepare("SELECT count(*) AS n FROM "+table).first("n"),1);
   console.log("D1 local: emissão autorizada e limitada, código de mesa de uso único (20 tentativas), cotação, pedido, status, seis reenvios concorrentes, expiração, revogação, isolamento da mesa/tenant e acompanhamento somente de leitura após 31 min; PASS");
 } finally {

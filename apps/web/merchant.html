@@ -6,6 +6,7 @@
   <meta name="referrer" content="same-origin">
   <title>Painel do estabelecimento · TapFlow</title>
   <link rel="stylesheet" href="./merchant.css">
+  <link rel="stylesheet" href="./kitchen.css">
 </head>
 <body>
   <a class="skip" href="#main">Ir para o painel</a>
@@ -39,7 +40,7 @@
     <p id="merchant-error" class="error" role="alert" hidden></p>
     <div id="panel" hidden>
       <nav aria-label="Seções do painel">
-        <a href="#estabelecimento">Estabelecimento</a><a href="#unidades">Unidades</a><a href="#categorias">Categorias</a><a href="#itens">Pratos</a><a href="#adicionais">Adicionais</a><a href="#aparencia">Aparência</a>
+        <a href="#estabelecimento">Estabelecimento</a><a href="#unidades">Unidades</a><a href="#mesas">Mesas</a><a href="#categorias">Categorias</a><a href="#itens">Pratos</a><a href="#adicionais">Adicionais</a><a href="#aparencia">Aparência</a><a href="#kitchen-view" id="kitchen-nav" hidden>Cozinha</a>
       </nav>
       <section class="card" id="estabelecimento" aria-labelledby="estabelecimento-title">
         <h2 id="estabelecimento-title">Estabelecimento</h2>
@@ -68,6 +69,16 @@
         <ul id="location-list" class="entries" aria-label="Unidades cadastradas"></ul>
         <label for="location-scope">Unidade ativa para o catálogo</label>
         <select id="location-scope"><option value="">Selecione</option></select>
+      </section>
+      <section class="card" id="mesas" aria-labelledby="mesas-title">
+        <h2 id="mesas-title">Mesas e links</h2>
+        <p>O link abre o cardápio da mesa. Baixe o QR Code para imprimir ou copie o link para gravar numa etiqueta NFC. Ele não autoriza pedidos.</p>
+        <form id="form-table">
+          <label for="table-name">Identificação da mesa</label>
+          <input id="table-name" name="name" required maxlength="48" placeholder="Ex.: Mesa 07">
+          <button type="submit">Cadastrar mesa</button>
+        </form>
+        <ul id="table-list" class="entries" aria-label="Mesas cadastradas"></ul>
       </section>
       <section class="card" id="categorias" aria-labelledby="categorias-title">
         <h2 id="categorias-title">Categorias</h2>
@@ -126,6 +137,30 @@
           <div class="actions"><button type="submit">Salvar rascunho</button><button id="publish-appearance" class="secondary" type="button" disabled>Publicar rascunho salvo</button></div>
         </form>
       </section>
+      <section class="card" id="kitchen-view" aria-labelledby="kitchen-title" hidden>
+    <section class="intro" aria-labelledby="kitchen-title">
+      <p class="eyebrow">PILOTO INTERNO</p>
+      <h2 id="kitchen-title">Painel da cozinha</h2>
+      <p>Acompanhe e atualize os pedidos da unidade selecionada.</p>
+      <p class="notice">Ambiente de teste. Não faz cobranças, envia mensagens ou recebe pedidos de clientes reais.</p>
+    </section>
+    <p id="kitchen-status" class="feedback" role="status" aria-live="polite" aria-atomic="true">O painel exige uma sessão de equipe verificada.</p>
+    <p id="kitchen-error" class="error" role="alert" hidden></p>
+    <div id="kitchen-panel" hidden>
+      <section class="scope" aria-label="Contexto da cozinha">
+        <label for="kitchen-tenant">Estabelecimento</label>
+        <select id="kitchen-tenant"><option value="">Selecione o estabelecimento</option></select>
+        <label for="kitchen-location">Unidade</label>
+        <select id="kitchen-location" disabled><option value="">Selecione a unidade</option></select>
+        <button type="button" id="kitchen-refresh">Atualizar pedidos</button>
+      </section>
+      <section aria-labelledby="kitchen-orders-title">
+        <h3 id="kitchen-orders-title">Pedidos</h3>
+        <p id="kitchen-empty">Selecione uma unidade para ver os pedidos.</p>
+        <ul id="kitchen-orders" class="orders"></ul>
+      </section>
+    </div>
+        </section>
     </div>
   </main>
   <script type="module" src="./merchant.mjs"></script>

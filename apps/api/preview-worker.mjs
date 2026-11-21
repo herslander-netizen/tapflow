@@ -1,4 +1,5 @@
 // TapFlow integrated preview — closed-by-default API. Not yet deployed.
+import {createMerchantKitchen} from "./merchant-kitchen.mjs";
 import {createMerchantAdmin} from "./merchant-admin.mjs";
 import {createMerchantAppearanceHandler} from "./merchant-appearance.mjs";
 import {createMerchantPreviewConfig} from "./merchant-preview-config.mjs";
@@ -16,7 +17,8 @@ function hostedLogin(config,env){
   if(!config||env.TAPFLOW_MERCHANT_IDENTITY_PROVIDER!=="auth0")return null;
   const issuer=new URL(env.TAPFLOW_MERCHANT_ISSUER);
   if(issuer.pathname!=="/"||issuer.protocol!=="https:"||issuer.port)return null;
-  return {issuer:issuer.href,clientId:env.TAPFLOW_MERCHANT_CLIENT_ID,audience:env.TAPFLOW_MERCHANT_AUDIENCE};
+  return {issuer:issuer.href,clientId:env.TAPFLOW_MERCHANT_CLIENT_ID,audience:env.TAPFLOW_MERCHANT_AUDIENCE,
+    ...(env.TAPFLOW_KITCHEN_PREVIEW==="true"?{kitchenEnabled:true}:{})};
 }
 async function serveAsset(env,url,path,method,{storefront=false,login=null}={}){
   if(typeof env.ASSETS?.fetch!=="function")return json(503,{error:"Página temporariamente indisponível"});
@@ -79,6 +81,8 @@ export default {
        const action=appearance[2]?"publish":request.method==="GET"?"read":"save";
        return createMerchantAppearanceHandler(config)(request,appearance[1],action);
      }
+     const kitchen=await createMerchantKitchen({...config,enabled:env.TAPFLOW_KITCHEN_PREVIEW==="true"})(request);
+     if(kitchen)return kitchen;
      return await createMerchantAdmin(config)(request)??json(404,{error:"Não disponível"});
    }
    if(url.pathname==="/api/admin/ai/description")

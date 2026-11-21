@@ -8,7 +8,7 @@ const reply=(status,body,headers)=>new Response(JSON.stringify(body),{status,hea
 // One tenant + one location + one published configuration in the same snapshot.
 // A draft, disabled tenant/location, or unpublished storefront never falls back to demo data.
 const MENU_SQL=`
- SELECT t.slug,t.name AS tenant_name,l.id AS location_id,l.name AS location_name,a.published_json,
+ SELECT t.slug,t.name AS tenant_name,l.id AS location_id,l.name AS location_name,a.published_json,dt.label AS table_label,
   COALESCE((SELECT json_group_array(json_object(
       'id', m.id, 'name',m.name,'description',m.description,'priceCents',m.price_cents,
       'available',json(CASE m.availability WHEN 'available' THEN 'true' ELSE 'false' END),
@@ -29,7 +29,9 @@ const MENU_SQL=`
  FROM tenants t
  JOIN locations l ON l.tenant_id=t.id
  JOIN tenant_appearances a ON a.tenant_id=t.id AND a.location_id=''
- WHERE t.slug=? AND l.id=? AND t.status='active' AND l.status='active' AND a.published_json IS NOT NULL`;
+ LEFT JOIN dining_tables dt ON dt.tenant_id=t.id AND dt.location_id=l.id AND dt.id=? AND dt.is_active=1
+ WHERE t.slug=? AND l.id=? AND t.status='active' AND l.status='active' AND a.published_json IS NOT NULL
+   AND (? IS NULL OR dt.id IS NOT NULL)`;
 
 export const validMenuPath=(slug,locationId)=>typeof slug==="string"&&typeof locationId==="string"&&slugPattern.test(slug)&&idPattern.test(locationId);
 
@@ -37,11 +39,15 @@ export async function handlePublicMenu(request,{enabled=false,db,slug,locationId
   if(enabled!==true||!validMenuPath(slug,locationId))return reply(404,{error:"Cardápio não publicado"});
   if(request.method!=="GET")return reply(405,{error:"Método não permitido"},{allow:"GET"});
   try{
-    const row=await db.prepare(MENU_SQL).bind(slug,locationId).first();
+    const selectors=new URL(request.url).searchParams.getAll("mesa");
+    if(selectors.length>1||(selectors.length===1&&!idPattern.test(selectors[0])))
+      return reply(404,{error:"Cardápio não publicado ou mesa indisponível"});
+    const tableId=selectors[0]??null;
+    const row=await db.prepare(MENU_SQL).bind(tableId,slug,locationId,tableId).first();
     if(!row)return reply(404,{error:"Cardápio não publicado"});
     const items=JSON.parse(row.items_json);
     return reply(200,{slug:row.slug,name:row.tenant_name,location:{id:row.location_id,name:row.location_name},
-      appearance:normalizeSettings(JSON.parse(row.published_json)),items:items.slice(0,200),limited:items.length>200,orderingEnabled:false});
+      ...(row.table_label?{table:{label:row.table_label}}:{}),appearance:normalizeSettings(JSON.parse(row.published_json)),items:items.slice(0,200),limited:items.length>200,orderingEnabled:false});
   }catch{
     return reply(503,{error:"Cardápio temporariamente indisponível"});
   }

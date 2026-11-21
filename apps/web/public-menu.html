@@ -11,19 +11,37 @@
 <body>
  <main class="menu-shell">
   <header class="menu-header">
-   <p class="label" id="storeLocation">TapFlow · Cardápio</p>
+   <div class="menu-context">
+    <p class="label" id="storeLocation">TapFlow · Cardápio</p>
+    <p class="table-badge" id="tableBadge" hidden></p>
+   </div>
    <h1 id="storeTitle">Cardápio</h1>
-   <p>Consulte preços e adicionais. Para pedir, fale com a equipe do estabelecimento.</p>
+   <p class="menu-intro">Para pedir, fale com a equipe do estabelecimento.</p>
   </header>
   <p id="menuStatus" role="status" aria-live="polite">Carregando cardápio…</p>
   <button type="button" id="retry" hidden>Tentar novamente</button>
   <section id="catalog" aria-label="Itens do cardápio" hidden>
    <label for="menuSearch">Buscar no cardápio</label>
-   <input type="search" id="menuSearch" placeholder="Nome, categoria ou ingrediente">
+   <input type="search" id="menuSearch" placeholder="Nome, categoria ou descrição">
    <fieldset id="categories" hidden><legend>Categorias</legend><div id="categoryButtons"></div></fieldset>
-   <ul id="menuItems"></ul>
+   <ul id="menuItems" role="list"></ul>
+   <button type="button" id="clearFilters" hidden>Limpar filtros</button>
   </section>
   <footer>Cardápio por TapFlow · <span>piloto de leitura</span></footer>
  </main>
+ <dialog id="reelsViewer" aria-label="Reels do cardápio">
+  <header class="reels-bar">
+   <button id="closeReels" type="button" aria-label="Voltar à lista" autofocus><span aria-hidden="true">←</span></button>
+   <span class="reels-kicker" aria-hidden="true">Reels</span>
+   <p id="reelsPosition" role="status" aria-live="polite"></p>
+  </header>
+  <div id="reelsTrack" tabindex="0" aria-label="Itens do cardápio em Reels"></div>
+  <footer class="reels-bar reels-navigation">
+   <button id="previousReel" type="button" aria-label="Item anterior">↑</button>
+   <p id="reelsHint" aria-hidden="true" hidden></p>
+   <button id="nextReel" type="button" aria-label="Próximo item">↓</button>
+   <progress id="reelsProgress" value="1" max="1" aria-hidden="true"></progress>
+  </footer>
+ </dialog>
 </body>
 </html>
