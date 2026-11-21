@@ -29,11 +29,16 @@
   </section>
   <footer>Cardápio por TapFlow · <span>piloto de leitura</span></footer>
  </main>
- <dialog id="photoViewer" aria-labelledby="photoCaption">
-  <button id="closePhoto" type="button" autofocus>Fechar</button>
-  <h2 id="photoCaption"></h2>
-  <div id="photoContent"></div>
-  <p class="photo-disclaimer">Foto ilustrativa da demonstração.</p>
+ <dialog id="reelsViewer" aria-label="Reels do cardápio">
+  <header class="reels-bar">
+   <button id="closeReels" type="button" autofocus>Voltar à lista</button>
+   <p id="reelsPosition" role="status" aria-live="polite"></p>
+  </header>
+  <div id="reelsTrack" tabindex="0" aria-label="Itens do cardápio em Reels"></div>
+  <footer class="reels-bar reels-navigation">
+   <button id="previousReel" type="button">Item anterior</button>
+   <button id="nextReel" type="button">Próximo item</button>
+  </footer>
  </dialog>
 </body>
 </html>

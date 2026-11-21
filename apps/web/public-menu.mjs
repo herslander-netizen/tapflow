@@ -84,44 +84,173 @@ function videoOption(base,name,photo){
   });
   return {section,release};
 }
-function photoLink(base,name,index,videoBase){
-  const link=element("a");
-  link.className="item-photo";
-  link.href=base+"-720.jpg";
-  link.setAttribute("aria-label",videoBase?"Foto e vídeo: "+name:"Ampliar foto ilustrativa de "+name);
-  const thumb=picture(base,{loading:index<2?"eager":"lazy"});
-  thumb.image.addEventListener("error",()=>{link.hidden=true;});
-  const hint=element("span",videoBase?"Foto e vídeo":"Ampliar");hint.setAttribute("aria-hidden","true");
-  link.append(thumb.output,hint);
-  thumb.image.src=thumb.src;
-  link.addEventListener("click",event=>{
-    if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
-    const viewer=$("photoViewer");
-    if(typeof viewer.showModal!=="function")return;
-    event.preventDefault();
-    const caption=$("photoCaption"), content=$("photoContent");
-    caption.textContent=name;
-    const detail=picture(base,{large:true,loading:"eager",alt:"Foto ilustrativa de "+name});
-    detail.image.addEventListener("error",()=>{
-      if(content.contains(detail.output))detail.output.replaceWith(element("p","Foto indisponível no momento."));
-    });
-    const photo=element("div");
-    photo.append(detail.output);
-    const motion=videoBase?videoOption(videoBase,name,photo):null;
-    content.replaceChildren(photo,...(motion?[motion.section]:[]));
-    detail.image.src=detail.src;
-    viewer.addEventListener("close",()=>{
-      motion?.release();
-      content.replaceChildren();
-      if(link.isConnected&&!link.hidden)link.focus();else search.focus();
-    },{once:true});
-    viewer.showModal();
-  });
-  return link;
+const viewer=$("reelsViewer"), track=$("reelsTrack"), position=$("reelsPosition");
+const closeReels=$("closeReels"), previous=$("previousReel"), next=$("nextReel");
+const historyKey="tapflowStorefrontReels";
+const modalSupported=typeof viewer.showModal==="function";
+const isOpen=()=>viewer.hasAttribute("open");
+const shell=document.querySelector(".menu-shell");
+let visibleRecords=[], reelSession=null, slides=[], active=-1, motion=null, closing=false, scrollFrame=0;
+function photoTrigger(item,base,index){
+  const button=element("button");
+  button.type="button";
+  button.className="item-photo";
+  button.setAttribute("aria-label","Ver no Reels: "+item.name);
+  if(base){
+    const thumb=picture(base,{loading:index<2?"eager":"lazy"});
+    thumb.image.addEventListener("error",()=>thumb.output.remove());
+    button.append(thumb.output);
+    thumb.image.src=thumb.src;
+  }
+  button.append(element("span","Ver no Reels"));
+  button.addEventListener("click",()=>openReels(item,button));
+  return button;
 }
+function makeSlide(item,index,total){
+  const slide=element("article"), detail=element("div"), photo=element("div");
+  slide.className="reels-frame";
+  slide.setAttribute("aria-label",String(index+1)+" de "+total+": "+item.name);
+  detail.className="reels-details";
+  if(item.categoryName)detail.append(element("p",item.categoryName));
+  detail.append(element("h2",item.name),element("strong",price.format(item.priceCents/100)));
+  if(item.description)detail.append(element("p",item.description));
+  if(!item.available)detail.append(element("p","Esgotado"));
+  if(item.addons.length){
+    const extras=element("details"), list=element("ul");
+    extras.append(element("summary","Adicionais"));
+    for(const addon of item.addons)list.append(element("li",addon.name+" · "+price.format(addon.priceCents/100)));
+    extras.append(list);detail.append(extras);
+  }
+  detail.append(element("p","Para pedir, fale com a equipe."));
+  photo.className="reels-photo";
+  const base=demoPhoto(path?.[1],path?.[2],item.id);
+  if(base){
+    const image=picture(base,{large:true,loading:"lazy",alt:"Foto ilustrativa de "+item.name});
+    image.image.addEventListener("error",()=>photo.replaceChildren(element("p","Foto indisponível")));
+    photo.append(image.output,element("p","Foto ilustrativa da demonstração."));
+    image.image.src=image.src;
+  }else photo.append(element("p","Foto indisponível"));
+  const media=element("div");
+  slide.append(photo,detail,media);
+  return {slide,photo,media,item};
+}
+function releaseMotion(){
+  motion?.release();
+  motion?.section.remove();
+  motion=null;
+  if(slides[active])slides[active].photo.hidden=false;
+}
+function activate(index){
+  if(!reelSession||index===active||!slides[index])return;
+  const previousTop=slides[index].slide.getBoundingClientRect().top;
+  releaseMotion();
+  active=index;reelSession.index=index;
+  position.textContent=(index+1)+" de "+slides.length;
+  previous.setAttribute("aria-disabled",String(index===0));
+  next.setAttribute("aria-disabled",String(index===slides.length-1));
+  const {item,photo,media}=slides[index];
+  const videoBase=demoVideo(path?.[1],path?.[2],item.id);
+  if(videoBase){motion=videoOption(videoBase,item.name,photo);media.append(motion.section);}
+  // Releasing a player above the active item can change its measured position.
+  const adjustment=slides[index].slide.getBoundingClientRect().top-previousTop;
+  if(adjustment)track.scrollTop+=adjustment;
+}
+function moveTo(index){
+  if(!slides[index]||index===active)return;
+  const target=slides[index].slide;
+  activate(index);
+  track.scrollTop+=target.getBoundingClientRect().top-track.getBoundingClientRect().top;
+}
+function showReels(){
+  if(isOpen()||!reelSession)return;
+  slides=reelSession.items.map((item,index)=>makeSlide(item,index,reelSession.items.length));
+  track.replaceChildren(...slides.map(entry=>entry.slide));
+  if(modalSupported)viewer.showModal();
+  else{
+    viewer.setAttribute("open","");
+    viewer.setAttribute("aria-modal","true");
+    viewer.setAttribute("role","dialog");
+    shell.inert=true;
+  }
+  closeReels.focus({preventScroll:true});
+  moveTo(reelSession.index);
+}
+function openReels(item,trigger){
+  if(isOpen()||closing)return;
+  const index=visibleRecords.indexOf(item);
+  if(index<0)return;
+  reelSession={id:Math.random().toString(36).slice(2),items:[...visibleRecords],index,trigger,scrollX:window.scrollX,scrollY:window.scrollY};
+  try{history.pushState({...history.state,[historyKey]:reelSession.id},"",location.href);}
+  catch{reelSession.id=null;}
+  showReels();
+}
+function hideReels(){
+  if(!isOpen())return;
+  cancelAnimationFrame(scrollFrame);scrollFrame=0;
+  releaseMotion();
+  if(modalSupported)viewer.close();
+  else{viewer.removeAttribute("open");shell.inert=false;}
+  track.replaceChildren();slides=[];active=-1;
+  const session=reelSession;
+  if(session){
+    (session.trigger.isConnected?session.trigger:search).focus({preventScroll:true});
+    const restoreScroll=()=>window.scrollTo({left:session.scrollX,top:session.scrollY,behavior:"instant"});
+    restoreScroll();
+    requestAnimationFrame(()=>{
+      if(!isOpen()&&reelSession===session&&!closing&&document.activeElement===(session.trigger.isConnected?session.trigger:search))restoreScroll();
+    });
+  }
+}
+function exitReels(){
+  if(closing||!isOpen())return;
+  if(reelSession?.id&&history.state?.[historyKey]===reelSession.id){closing=true;history.back();}
+  else hideReels();
+}
+closeReels.addEventListener("click",exitReels);
+viewer.addEventListener("cancel",event=>{event.preventDefault();exitReels();});
+viewer.addEventListener("keydown",event=>{
+  if(modalSupported)return;
+  if(event.key==="Escape"){event.preventDefault();exitReels();return;}
+  if(event.key!=="Tab")return;
+  const controls=[...viewer.querySelectorAll("button:not(:disabled),[tabindex='0'],summary")].filter(el=>el.getClientRects().length);
+  const index=controls.indexOf(document.activeElement);
+  if(index<0||event.shiftKey&&index===0||!event.shiftKey&&index===controls.length-1){
+    event.preventDefault();
+    (event.shiftKey?controls.at(-1):controls[0])?.focus();
+  }
+});
+previous.addEventListener("click",()=>moveTo(active-1));
+next.addEventListener("click",()=>moveTo(active+1));
+track.addEventListener("keydown",event=>{
+  if(event.target!==track||!["ArrowUp","ArrowDown"].includes(event.key))return;
+  event.preventDefault();
+  moveTo(active+(event.key==="ArrowUp"?-1:1));
+});
+track.addEventListener("scroll",()=>{
+  if(scrollFrame||!isOpen())return;
+  scrollFrame=requestAnimationFrame(()=>{
+    scrollFrame=0;
+    if(!isOpen())return;
+    const top=track.getBoundingClientRect().top+Math.min(72,track.clientHeight/4);
+    const current=slides.findIndex(({slide})=>slide.getBoundingClientRect().bottom>top);
+    if(current>=0)activate(current);
+  });
+});
+window.addEventListener("popstate",event=>{
+  closing=false;
+  if(reelSession?.id&&event.state?.[historyKey]===reelSession.id)showReels();
+  else hideReels();
+});
+window.addEventListener("pagehide",()=>{if(isOpen())releaseMotion();});
+window.addEventListener("pageshow",event=>{
+  if(event.persisted&&isOpen()&&active>=0){
+    const index=active;active=-1;activate(index);
+  }
+});
 function render(){
   const query=normalize(search.value).trim();
   const visible=records.filter(item=>(!selected||item.categoryId===selected)&&normalize([item.name,item.description,item.categoryName].join(" ")).includes(query));
+  visibleRecords=visible;
   items.replaceChildren(...visible.map((item,index)=>{
     const li=document.createElement("li");li.className="menu-item";
     if(item.categoryName){const category=element("p",item.categoryName);category.className="label";li.append(category);}
@@ -132,10 +261,8 @@ function render(){
     body.append(head);
     if(item.description){const description=element("p",item.description);description.className="item-description";body.append(description);}
     const base=demoPhoto(path?.[1],path?.[2],item.id);
-    if(base){
-      const row=element("div");row.className="item-row";
-      row.append(body,photoLink(base,item.name,index,demoVideo(path?.[1],path?.[2],item.id)));li.append(row);
-    }else li.append(body);
+    const row=element("div");row.className="item-row";
+    row.append(body,photoTrigger(item,base,index));li.append(row);
     if(!item.available){const unavailable=element("p","Esgotado");unavailable.className="item-status";li.append(unavailable);}
     if(item.addons.length){
       const details=document.createElement("details"),list=document.createElement("ul");
@@ -207,6 +334,4 @@ clearFilters.addEventListener("click",()=>{
   search.focus();
   render();
 });
-$("closePhoto").addEventListener("click",()=>$("photoViewer").close());
-window.addEventListener("pagehide",()=>{if($("photoViewer").open)$("photoViewer").close();});
 search.addEventListener("input",render);retry.addEventListener("click",()=>load({fromRetry:true}));load();

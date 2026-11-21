@@ -99,31 +99,59 @@ footer { margin-top: 18px; padding-block: 12px; font-size: .82rem; }
 @media (forced-colors: active) {
   button, [aria-pressed=true] { border-color: ButtonText; }
 }
-.item-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+.item-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(58px, 24%); gap: 10px; align-items: start; }
 .item-body { min-inline-size: 0; }
 .item-photo {
-  display: block; inline-size: 78px; min-block-size: 52px; overflow: hidden;
-  border-radius: 9px; color: inherit;
+  display: grid; gap: 4px; justify-items: stretch; min-inline-size: 0; min-block-size: 44px;
+  overflow-wrap: anywhere; padding: 4px; border: 1px solid var(--control-border);
+  border-radius: 9px; font-size: .875rem; line-height: 1.25;
 }
 .item-photo:focus-visible { outline-color: var(--focus-on-surface); }
-.item-photo picture, #photoContent picture { display: block; }
-.item-photo img, #photoContent img { display: block; inline-size: 100%; block-size: auto; }
-#photoViewer {
-  inline-size: min(calc(100% - 32px), 40rem); max-block-size: calc(100% - 32px);
-  padding: 16px; border: 0; border-radius: 16px;
-  background: var(--bg); color: var(--text);
+.item-photo picture, .reels-photo picture { display: block; }
+.item-photo img, .reels-photo img { display: block; inline-size: 100%; block-size: auto; border-radius: 8px; }
+.item-photo img { aspect-ratio: 1 / 1; object-fit: cover; }
+.item-photo span { text-align: center; }
+html:has(#reelsViewer[open]) { overflow: hidden; scrollbar-gutter: stable; }
+#reelsViewer {
+  inline-size: min(100%, 42rem); block-size: min(100%, 56rem); max-inline-size: 100%; max-block-size: 100%;
+  padding: 0; border: 0; background: var(--bg); color: var(--text);
 }
-#photoViewer::backdrop { background: rgb(0 0 0 / 65%); }
-#photoCaption { font-size: clamp(1.15rem, 4vw, 1.65rem); margin: 12px 0 8px; }
-#photoContent img { border-radius: 10px; }
-.photo-disclaimer { color: var(--muted); font-size: .875rem; margin: 8px 0 0; }
-.item-photo span {
-  display: block; padding-block: 3px 1px; text-align: center;
-  color: var(--muted-on-surface, var(--text)); font-size: .72rem; text-decoration: underline;
+#reelsViewer:not([open]) { display: none; }
+#reelsViewer[aria-modal=true] { box-shadow: 0 0 0 100vmax rgb(0 0 0 / 65%); }
+#reelsViewer[open] { position: fixed; inset: 0; margin: auto; z-index: 10; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+@media (prefers-reduced-motion: no-preference) {
+  #reelsViewer[open] { animation: reels-in 160ms ease-out; }
+  @keyframes reels-in { from { opacity: 0; } to { opacity: 1; } }
 }
+#reelsViewer::backdrop { background: rgb(0 0 0 / 65%); }
+.reels-bar {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+  background: var(--bg);
+}
+.reels-bar:first-child { padding-block-start: max(8px, env(safe-area-inset-top)); }
+.reels-navigation { padding-block-end: max(8px, env(safe-area-inset-bottom)); }
+.reels-bar button[aria-disabled=true] { border-style: dashed; cursor: default; }
+#reelsPosition { margin: 0; font-variant-numeric: tabular-nums; }
+#reelsTrack {
+  overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none; scroll-snap-type: y proximity;
+  scrollbar-width: thin; outline-offset: -3px;
+}
+.reels-frame {
+  min-block-size: 100%; padding: 12px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
+  scroll-snap-align: start; overflow-wrap: anywhere; border-block-start: 1px solid var(--control-border);
+}
+.reels-details h2 { margin: 0.25em 0; font-size: clamp(1.375rem, 5vw, 2rem); line-height: 1.22; }
+.reels-details p { margin: 0.5em 0; }
+.reels-details summary { cursor: pointer; min-block-size: 44px; align-content: center; }
+.reels-photo { max-inline-size: 32rem; margin: 0 auto 12px; }
+.reels-photo img { max-block-size: 40svh; object-fit: cover; }
+.reels-photo p, .demo-video p { color: var(--muted); margin: 6px 0; }
 .demo-video { margin-block-start: 12px; }
-.demo-video p { color: var(--muted); margin: 6px 0; }
 .demo-video video {
   display: block; inline-size: min(100%, 320px); max-block-size: 48dvh;
   margin: 8px auto 0; background: #000; border-radius: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #reelsTrack { scroll-behavior: auto; scroll-snap-type: none; }
 }
