@@ -58,3 +58,8 @@ O comando `npm test` valida regras locais de preços, adicionais e estados; mais
 ### Mídia de demonstração
 
 O Burger da Brasa possui um clipe WebM com licença CC BY 4.0 e atribuição. Reproduz mudo apenas quando permitido e tem foto de fallback. Leia [Mídias de demonstração](docs/MIDIAS_DEMO.md). Ainda não há infraestrutura de vídeo do TapFlow.
+
+
+### Reproduzir o Worker demonstrativo
+
+Execute `npm run build:preview` para gerar `.build/tapflow-preview-worker.mjs` a partir de `apps/web` sem acessar a rede, sem segredos e **sem publicar**. O preview na Cloudflare usa binding D1 `DB`, na conta exclusiva TapFlow; a configuração está no PR #5. Essa embalagem do frontend é temporária e será substituída por Workers Static Assets.

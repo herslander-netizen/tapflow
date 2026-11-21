@@ -27,5 +27,6 @@ jobs:
           node --check apps/web/demo-data.js
           node --check apps/web/media.mjs
           node --check scripts/serve.mjs
+          node --check scripts/build-preview-worker.mjs
       - name: Testes unitários (sem dependências e sem deploy)
         run: npm test
