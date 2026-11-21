@@ -92,6 +92,31 @@ if (host) {
     applyTheme(root, draft);
     renderEditor();
   }
+  // Atualização contínua do seletor de cor sem reconstruir o input ativo:
+  // preservar o popover nativo e a interação por toque/teclado.
+  function updateLiveColor(field, value) {
+    draft = normalizeSettings({...draft, [field]:value});
+    const result = applyTheme(root, draft);
+    const previewCard = dialog.querySelector(".appearance-preview");
+    if (previewCard) {
+      previewCard.style.background = result.tokens["--bg"];
+      previewCard.style.color = result.tokens["--text"];
+      previewCard.style.borderColor = result.tokens["--stroke"];
+    }
+    const description = previewCard?.querySelector(":scope > span");
+    if (description) description.style.color = result.tokens["--muted"];
+    const button = previewCard?.querySelector(".appearance-preview-row > span");
+    if (button) {
+      button.style.background = result.tokens["--accent"];
+      button.style.color = result.tokens["--on-accent"];
+    }
+    const output = dialog.querySelector('output[for="' + (field === "accent" ? "theme-accent" : "theme-background") + '"]');
+    if (output) output.textContent = value.toUpperCase();
+    const contrast = dialog.querySelector(".appearance-contrast");
+    if (contrast) contrast.textContent =
+      (result.adjusted ? "Cor principal ajustada automaticamente para preservar o contraste. " : "") +
+      "Texto: " + result.contrast.text.toFixed(1) + ":1 · Botão: " + result.contrast.button.toFixed(1) + ":1.";
+  }
   function show() {
     committed = readSaved();
     draft = clone(committed);
@@ -132,18 +157,17 @@ if (host) {
       return;
     }
   });
+  dialog.addEventListener("input", event => {
+    if (event.target.id === "theme-accent") updateLiveColor("accent", event.target.value);
+    if (event.target.id === "theme-background") updateLiveColor("background", event.target.value);
+  });
   dialog.addEventListener("change", event => {
     if (event.target.name === "appearance-mode") {
       preview({...draft,mode:event.target.value,background:null});
       return;
     }
-    if (event.target.id === "theme-accent") {
-      preview({...draft,accent:event.target.value});
-      return;
-    }
-    if (event.target.id === "theme-background") {
-      preview({...draft,background:event.target.value});
-    }
+    if (event.target.id === "theme-accent") updateLiveColor("accent", event.target.value);
+    if (event.target.id === "theme-background") updateLiveColor("background", event.target.value);
   });
   dialog.addEventListener("close", () => {
     if (!accepted) applyTheme(root, committed);
