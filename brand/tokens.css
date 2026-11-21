@@ -1,0 +1,21 @@
+/* TapFlow | ALVO Digital | ID visual 1.0 | não aplicado ao site publicado */
+:root {
+  --tapflow-forest: #024519;
+  --tapflow-lime: #B6E229;
+  --tapflow-cream: #FEFBF6;
+  --tapflow-ink: #101A13;
+  --tapflow-sage: #E6F1E7;
+  --tapflow-deep-forest: #003615;
+  --tapflow-font: "Sora", system-ui, -apple-system, sans-serif;
+  --tapflow-radius-button: 16px;
+  --tapflow-radius-card: 24px;
+  --tapflow-radius-sheet: 28px;
+  --tapflow-min-touch-target: 44px;
+  --tapflow-duration-press: 160ms;
+  --tapflow-duration-sheet: 260ms;
+  --tapflow-duration-feed: 320ms;
+}
+.tapflow-brand-button {min-height:var(--tapflow-min-touch-target);border:0;border-radius:var(--tapflow-radius-button);background:var(--tapflow-lime);color:var(--tapflow-forest);font:700 1rem/1.25 var(--tapflow-font);padding:14px 20px;cursor:pointer;}
+.tapflow-brand-button:focus-visible {outline:3px solid var(--tapflow-ink);outline-offset:3px;}
+.tapflow-brand-button:active {transform:scale(.98);transition:transform var(--tapflow-duration-press) ease;}
+@media(prefers-reduced-motion:reduce){.tapflow-brand-button:active{transform:none;transition:none;}}

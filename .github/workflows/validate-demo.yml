@@ -27,6 +27,7 @@ jobs:
       - name: Verificar sintaxe da interface
         run: |
           node --check apps/api/order-service.mjs
+          node --check apps/api/preview-worker.mjs
           node --check apps/web/app.js
           node --check apps/web/domain.mjs
           node --check apps/web/demo-data.js
