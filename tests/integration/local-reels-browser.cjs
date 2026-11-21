@@ -53,9 +53,12 @@ const server=createServer(async(req,res)=>{
  const box=await dialog.boundingBox(), viewport=page.viewportSize();
  assert.ok(box&&box.width>=viewport.width-2&&box.height>=viewport.height-2,
   "the active Reel fills the mobile viewport");
+ const heroBox=await dialog.locator(".reels-hero").nth(1).boundingBox();
+ assert.ok(heroBox&&heroBox.height>=viewport.height-2,"media extends behind the overlay controls");
  const contrast=await dialog.locator(".reels-details").nth(1).evaluate(el=>{
    const numbers=s=>s.match(/[0-9.]+/g).map(Number), css=getComputedStyle(el);
-   const fg=numbers(css.color), rgba=numbers(css.backgroundColor);
+   const fg=numbers(css.color), rgba=numbers(css.getPropertyValue("--reels-scrim").replace(/(\d+)%/,(_,x)=>String(+x/100)));
+   if(!css.backgroundImage.startsWith("linear-gradient"))throw Error("caption scrim is missing");
    const composite=rgba.slice(0,3).map(c=>c*(rgba[3]??1)+255*(1-(rgba[3]??1)));
    const luminance=rgb=>rgb.reduce((sum,c,i)=>{
      const v=c/255;return sum+[.2126,.7152,.0722][i]*(v<=.04045?v/12.92:((v+.055)/1.055)**2.4);

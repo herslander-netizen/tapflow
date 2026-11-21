@@ -129,9 +129,6 @@ function makeSlide(item,index,total){
   slide.className="reels-frame";
   slide.setAttribute("aria-label",String(index+1)+" de "+total+": "+item.name);
   detail.className="reels-details";
-  if(item.categoryName){
-    const category=element("p",item.categoryName);category.className="reels-category";detail.append(category);
-  }
   detail.append(element("h2",item.name));
   const meta=element("div");meta.className="reels-meta";
   meta.append(element("strong",price.format(item.priceCents/100)));
@@ -140,8 +137,6 @@ function makeSlide(item,index,total){
   if(item.description){const description=element("p",item.description);description.className="reels-description";detail.append(description);}
   const media=element("div");
   detail.append(media);
-  const note=element("p","Para pedir, fale com a equipe.");
-  note.className="reels-note";detail.append(note);
   layer.append(photo);
   hero.append(layer,detail);
   slide.append(hero);
@@ -158,8 +153,6 @@ function makeSlide(item,index,total){
     // Offscreen slides render light thumbnails. Only visiting a slide requests its hero.
     const image=picture(base,{alt:"Foto ilustrativa de "+item.name});
     image.image.addEventListener("error",()=>{image.output.remove();if(!photo.querySelector("picture"))photo.append(fallback);});
-    const caption=element("p","Foto ilustrativa da demonstração.");
-    caption.className="reels-credit";detail.append(caption);
     photo.append(image.output);
     image.image.src=image.src;
   }else photo.append(fallback);
