@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "tapflow-preview",
+  "main": "apps/api/preview-worker.mjs",
+  "compatibility_date": "2026-11-21",
+  "workers_dev": true,
+  "assets": {
+    "directory": "apps/web",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/v1/*"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tapflow-preview-db",
+      "database_id": "bf381ffc-9caa-4436-81b7-93f3cf6b8a25"
+    }
+  ]
+}
