@@ -11,6 +11,8 @@ Este repositório contém o **kit de planejamento e arranque**, não uma aplica�
 ## Documentos para começar
 
 - [Documento mestre (PRD)](docs/PRD.md)
+- [Pesquisa de concorrentes, open source e roadmap — 21/11/2026](docs/PESQUISA_ESTRATEGICA_2026.md)
+- [Decisões propostas de arquitetura — ADR-001](docs/ADR_STACK_001.md)
 - [Prompt de arranque — Fases 0 e 1](docs/PROMPT_CODEX_FASE_0_1.md)
 - [Backlog](docs/BACKLOG.csv)
 - [Tokens de identidade propostos](packages/ui/tokens/lime-noir.json)
