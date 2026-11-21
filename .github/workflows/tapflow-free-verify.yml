@@ -1,0 +1,25 @@
+name: TapFlow — validar preparação Free
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/free-stack/**"
+      - "tests/unit/free-infra.test.mjs"
+      - ".github/workflows/tapflow-free-verify.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  free-safety-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verificar sintaxe do Worker
+        run: node --check infra/free-stack/worker.mjs
+      - name: Testar modo gratuito e bloqueio de deploy
+        run: node --test tests/unit/free-infra.test.mjs
+      # Intencional: nenhum login, segredo, deploy, criação de banco ou chamada a serviços pagos.

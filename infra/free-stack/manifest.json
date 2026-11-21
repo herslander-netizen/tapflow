@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "TapFlow",
+  "owner": "ALVO Digital",
+  "accountPolicy": {
+    "dedicatedAccountOnly": true,
+    "accountEmailStoredInRepository": false,
+    "expectedAccountAlias": "TapFlow",
+    "doNotUseExistingAccounts": [
+      "Flow",
+      "Alvo OS",
+      "KAIRÓS"
+    ],
+    "verifyConnectedIdentityBeforeProvisioning": true
+  },
+  "mode": "free-only-preparation",
+  "provisioning": {
+    "enabled": false,
+    "automaticDeploy": false,
+    "deployToProduction": false,
+    "allowBillingUpgrade": false,
+    "allowPaidAddons": false,
+    "requireManualOwnerApproval": true
+  },
+  "environments": {
+    "preview": {
+      "configured": false,
+      "workerName": "tapflow-preview",
+      "databaseName": "tapflow-preview-db",
+      "staticAssets": "workers-static-assets",
+      "domain": "workers.dev (when activated)",
+      "mediaStorage": "bundled-demo-posters-only",
+      "publicCustomerData": false
+    },
+    "production": {
+      "configured": false,
+      "enabled": false
+    }
+  },
+  "services": [
+    {
+      "provider": "GitHub",
+      "service": "Repository + Actions",
+      "tier": "Free",
+      "status": "repository-existing",
+      "purpose": "source, PRs and limited CI",
+      "requiresAccountSetup": false
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Workers Static Assets",
+      "tier": "Free",
+      "status": "blocked-new-account-not-connected",
+      "purpose": "public SPA and API on workers.dev",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "D1",
+      "tier": "Workers Free",
+      "status": "blocked-new-account-not-connected",
+      "purpose": "preview SQL storage only",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Turnstile",
+      "tier": "Free",
+      "status": "deferred",
+      "purpose": "anti-abuse on future forms",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Queues",
+      "tier": "Workers Free",
+      "status": "deferred",
+      "purpose": "async notifications when needed",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "R2",
+      "tier": "Free allowance, possible overages",
+      "status": "billing-risk-not-enabled",
+      "purpose": "future restaurant-owned video files",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Supabase",
+      "service": "Postgres + Auth",
+      "tier": "Free",
+      "status": "optional-unprovisioned",
+      "purpose": "alternative database if tested/needed",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Oracle",
+      "service": "Always Free Compute",
+      "tier": "Always Free",
+      "status": "optional-unprovisioned",
+      "purpose": "video processing only after VM capacity verification",
+      "requiresAccountSetup": true
+    }
+  ],
+  "criticalSecurity": [
+    "Never paste secrets into GitHub",
+    "No real financial transactions",
+    "Tenant derived from authenticated context",
+    "Demo does not send real orders",
+    "Do not create services in another product's account",
+    "Do not assume free tier is cost-capped when paid billing is active"
+  ]
+}
