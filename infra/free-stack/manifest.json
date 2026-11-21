@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "TapFlow",
+  "owner": "ALVO Digital",
+  "accountPolicy": {
+    "dedicatedAccountOnly": true,
+    "accountEmailStoredInRepository": false,
+    "expectedAccountAlias": "TapFlow",
+    "doNotUseExistingAccounts": [
+      "Flow",
+      "Alvo OS",
+      "KAIRÓS"
+    ],
+    "verifyConnectedIdentityBeforeProvisioning": true
+  },
+  "mode": "free-preview-provisioned",
+  "provisioning": {
+    "enabled": false,
+    "automaticDeploy": false,
+    "deployToProduction": false,
+    "allowBillingUpgrade": false,
+    "allowPaidAddons": false,
+    "requireManualOwnerApproval": true,
+    "manualPreviewCreated": true
+  },
+  "environments": {
+    "preview": {
+      "configured": true,
+      "workerName": "tapflow-preview",
+      "databaseName": "tapflow-preview-db",
+      "staticAssets": "bundled-demo-in-worker",
+      "domain": "https://tapflow-preview.tapflowse.workers.dev",
+      "mediaStorage": "bundled-demo-posters-only",
+      "publicCustomerData": false,
+      "databaseId": "bf381ffc-9caa-4436-81b7-93f3cf6b8a25",
+      "schemaApplied": true,
+      "customerOrdersEnabled": false,
+      "paymentsEnabled": false,
+      "aiEnabled": false,
+      "externalBrowserValidation": "github-actions-http-smoke",
+      "aiFreeTierConfirmed": false,
+      "aiSecretStatus": "no-secrets-configured-manual-dashboard-step",
+      "aiRequestsMaxPerUTCday": 5,
+      "aiIntegrationStatus": "private-route-deployed-locked",
+      "aiQuotaTableApplied": true,
+      "evolutionStatus": "project-provisioned-pairing-required",
+      "evolutionProjectSlug": "tapflow",
+      "evolutionWhatsAppConnected": false,
+      "evolutionSendEnabled": false,
+      "evolutionAdapterDeployed": false,
+      "agentsStatus": "five-draft-only-internal-modules",
+      "agentCount": 5,
+      "agentAutonomousActions": false,
+      "agentsDeployed": false
+    },
+    "production": {
+      "configured": false,
+      "enabled": false
+    }
+  },
+  "services": [
+    {
+      "provider": "GitHub",
+      "service": "Repository + Actions",
+      "tier": "Free",
+      "status": "repository-existing",
+      "purpose": "source, PRs and limited CI",
+      "requiresAccountSetup": false
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Workers (embedded prototype files)",
+      "tier": "Free",
+      "status": "preview-deployed-manually",
+      "purpose": "public SPA and API on workers.dev",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "D1",
+      "tier": "Workers Free",
+      "status": "preview-created-schema-applied",
+      "purpose": "preview SQL storage only",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Turnstile",
+      "tier": "Free",
+      "status": "deferred",
+      "purpose": "anti-abuse on future forms",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "Queues",
+      "tier": "Workers Free",
+      "status": "deferred",
+      "purpose": "async notifications when needed",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Cloudflare",
+      "service": "R2",
+      "tier": "Free allowance, possible overages",
+      "status": "billing-risk-not-enabled",
+      "purpose": "future restaurant-owned video files",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Supabase",
+      "service": "Postgres + Auth",
+      "tier": "Free",
+      "status": "account-connected-no-project-created",
+      "purpose": "alternative database if tested/needed",
+      "requiresAccountSetup": true
+    },
+    {
+      "provider": "Oracle",
+      "service": "Always Free Compute",
+      "tier": "Always Free",
+      "status": "optional-unprovisioned",
+      "purpose": "video processing only after VM capacity verification",
+      "requiresAccountSetup": true
+    }
+  ],
+  "criticalSecurity": [
+    "Never paste secrets into GitHub",
+    "No real financial transactions",
+    "Tenant derived from authenticated context",
+    "Demo does not send real orders",
+    "Do not create services in another product's account",
+    "Do not assume free tier is cost-capped when paid billing is active"
+  ]
+}
