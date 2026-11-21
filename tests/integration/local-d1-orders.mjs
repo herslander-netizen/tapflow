@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
+import { createOrderAdmissionIssuer } from "../../apps/api/order-admission.mjs";
 const [repo, miniflareFile] = process.argv.slice(2);
 if (!repo || !miniflareFile) throw Error("Informe checkout e entrada Miniflare local");
 const { Miniflare } = await import(pathToFileURL(miniflareFile));
@@ -26,7 +27,7 @@ const modules = [
 const mf = new Miniflare({modules, compatibilityDate:"2026-08-06", d1Databases:{DB:"tapflow-local-qa-only"}, d1Persist:false, telemetry:{enabled:false}});
 try {
   const db = await mf.getD1Database("DB");
-  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql"]) {
+  for (const path of ["infra/free-stack/d1/0001_schema.sql", "infra/free-stack/d1/0003_order_sessions.sql", "infra/free-stack/d1/0004_order_admissions.sql", "infra/free-stack/d1/0005_order_admission_issue_index.sql"]) {
     const sql = (await get(path)).split("\n").filter(line => !/^\s*--|^\s*PRAGMA/.test(line)).join("\n");
     const triggerAt=sql.indexOf("CREATE TRIGGER");
     const plain=triggerAt<0?sql:sql.slice(0,triggerAt);
@@ -40,6 +41,16 @@ try {
     db.prepare("INSERT INTO menu_items(id,tenant_id,location_id,name,price_cents,availability) VALUES ('aa','ta','la','Fictício A',2500,'available'),('bb','tb','lb','Fictício B',500,'available')"),
   ]);
   const now=Date.now();
+  const staff={staffId:"fixture-staff",tenantId:"ta",locationId:"la",permission:"issue_table_admission"};
+  const issue=createOrderAdmissionIssuer({db,now:()=>now,authorizeStaff:async()=>staff});
+  assert.equal(await issue(null,"mb"),null);
+  assert.equal(await createOrderAdmissionIssuer({db})(staff,"ma2"),null);
+  const issued=(await Promise.all(Array.from({length:12},()=>issue(null,"ma2")))).filter(Boolean);
+  assert.equal(issued.length,3);
+  assert.equal(await issue(null,"ma2"),null);
+  const issuedHashes=(await db.prepare("SELECT admission_hash FROM order_admissions WHERE table_id='ma2'").all()).results;
+  assert.deepEqual(new Set(issuedHashes.map(row=>row.admission_hash)),
+    new Set(issued.map(grant=>createHash("sha256").update(grant.code).digest("hex"))));
   const fixture = (char, a, b, c, expiry=now+180000) => {
     const token=char.repeat(43), hash=createHash("sha256").update(token).digest("hex");
     return {token,hash,write:db.prepare("INSERT INTO order_sessions(session_hash,tenant_id,location_id,table_id,expires_at_ms) VALUES (?,?,?,?,?)").bind(hash,a,b,c,expiry)};
@@ -77,7 +88,7 @@ try {
   assert.equal((await call("/v1/orders",main.token,cart,"miniflare-order-test-2")).status,401);
   for(const table of ["orders","order_lines","order_events","order_idempotency"])
     assert.equal(await db.prepare("SELECT count(*) AS n FROM "+table).first("n"),1);
-  console.log("D1 local: código de mesa de uso único (20 tentativas), cotação, pedido, status, seis reenvios concorrentes, expiração, revogação, isolamento da mesa/tenant; PASS");
+  console.log("D1 local: emissão autorizada e limitada, código de mesa de uso único (20 tentativas), cotação, pedido, status, seis reenvios concorrentes, expiração, revogação, isolamento da mesa/tenant; PASS");
 } finally {
   await mf.dispose();
 }

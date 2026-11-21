@@ -8,17 +8,15 @@ O Worker e o cardápio de demonstração continuam como estão.
 - O servidor verifica um token opaco de alta entropia enviado em `Authorization: Bearer`,
   usa apenas seu SHA-256 no banco e obtém estabelecimento, unidade e mesa da sessão.
   O navegador não escolhe esse escopo. A sessão expirada, revogada ou de local inativo é recusada.
-- As migrações `0003_order_sessions.sql` e `0004_order_admissions.sql` são aditivas para o D1 dedicado do TapFlow e **não foram aplicadas** a nenhum ambiente hospedado.
+- As migrações `0003_order_sessions.sql` a `0005_order_admission_issue_index.sql` são aditivas para o D1 dedicado do TapFlow e **não foram aplicadas** a nenhum ambiente hospedado.
 - O resgate interno consome um código de uso único com no máximo cinco minutos de validade e
-  emite uma sessão de 30 minutos em uma única operação. Ainda não há emissor nem rota pública.
+  emite uma sessão de 30 minutos em uma única operação. O emissor interno exige identidade, permissão e vínculo à unidade atestados pelo servidor. Ainda não há rota pública nem login real da equipe.
   Nenhum banco do Flow, Alvo OS ou Evolution faz parte deste passo.
 
 ## Antes de ativar
 
-1. Implementar admissão à mesa (pela equipe autenticada ou por código de abertura curto,
-   descartável e com prazo), para que uma foto de QR antigo não dê autorização para pedir.
-2. Emitir tokens aleatórios de 32 bytes; não registrá-los em URL ou logs. Limitar tentativas
-   e emissão, impedir reutilização do código de abertura e limpar sessões expiradas.
+1. Ligar o emissor ao login da equipe e a uma associação de unidade verificada no servidor. Uma foto do QR fixo não deve dar autorização para pedir.
+2. Manter os tokens e códigos opacos de 32 bytes fora de URL e logs. O emissor já limita códigos ativos e bem-sucedidos por mesa; faltam limites de tentativas negadas na borda e limpeza de sessões expiradas.
 3. Preservar a rechecagem de revogação e expiração na gravação. O guard já usa o relógio do banco
    no batch do pedido; os testes simulam mudanças entre a autorização e a persistência.
 4. Validar no Wrangler/D1 local e depois na prévia isolada: concorrência e rollback do D1,
@@ -37,6 +35,6 @@ node tests/integration/local-d1-orders.mjs "$PWD" /caminho/do/miniflare/dist/src
 
 O teste usa um Worker de fixture, com banco descartável em memória e sem credenciais ou ID de banco real.
 Usa a data de compatibilidade 2026-08-06 suportada pela versão local; não altera o Wrangler do projeto.
-Verifica 20 resgates simultâneos do mesmo código, um único pedido com múltiplos reenvios, consulta de
+Verifica emissão autorizada e limitada por mesa, 20 resgates simultâneos do mesmo código, um único pedido com múltiplos reenvios, consulta de
 status, expiração, revogação e isolamento entre mesas e estabelecimentos. Não prova concorrência no
 serviço hospedado nem ativação da prévia.
