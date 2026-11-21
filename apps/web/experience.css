@@ -28,3 +28,11 @@
  .collection .side-panel{margin-top:20px}
  .bottom-nav .bottom-link:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 }
+
+.reel-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;pointer-events:none;transition:opacity .2s}
+.reel-video.is-playing{opacity:1}
+.reel-credit{display:block;margin-top:8px;max-width:68%;font-size:10px;color:#fff;line-height:1.4;text-decoration:underline;text-underline-offset:3px;background:#0008;padding:5px 8px;border-radius:8px}
+.reel-top-icons{z-index:5}
+.reel-top-icons button{min-height:38px;min-width:38px}
+@media(max-width:740px){.reel-top-icons{top:136px;right:15px;gap:5px}.reel-credit{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.reel-video{transition:none}}

@@ -25,6 +25,7 @@ jobs:
           node --check apps/web/app.js
           node --check apps/web/domain.mjs
           node --check apps/web/demo-data.js
+          node --check apps/web/media.mjs
           node --check scripts/serve.mjs
       - name: Testes unitários (sem dependências e sem deploy)
         run: npm test

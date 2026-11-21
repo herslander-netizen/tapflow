@@ -53,3 +53,8 @@ A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a part
 O comando `npm test` valida regras locais de preços, adicionais e estados; mais informações em [docs/PROTOTIPO_DEMO.md](docs/PROTOTIPO_DEMO.md).
 
 **Atenção:** fotos, pedidos, preços e cozinha são demonstrativos. Nenhuma integração real de pagamento, NFC, QR, banco ou restaurante foi ativada.
+
+
+### Mídia de demonstração
+
+O Burger da Brasa possui um clipe WebM com licença CC BY 4.0 e atribuição. Reproduz mudo apenas quando permitido e tem foto de fallback. Leia [Mídias de demonstração](docs/MIDIAS_DEMO.md). Ainda não há infraestrutura de vídeo do TapFlow.

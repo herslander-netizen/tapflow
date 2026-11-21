@@ -26,7 +26,14 @@ export const items = [
         "name": "Molho especial",
         "price": 290
       }
-    ]
+    ],
+    "video": {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Hamburger-fries-tokyo-japan-july31-2021.webm",
+      "type": "video/webm",
+      "page": "https://commons.wikimedia.org/wiki/File:Hamburger-fries-tokyo-japan-july31-2021.webm",
+      "author": "Nesnad",
+      "license": "CC BY 4.0"
+    }
   },
   {
     "id": "pizza-burrata",

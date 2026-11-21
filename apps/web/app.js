@@ -2,6 +2,7 @@
   "use strict";
   const {brl,quantity,cartLine,cartTotal,nextOrderStatus} = await import("./domain.mjs");
   const {items} = await import("./demo-data.js");
+  const {canAutoplay,videoForItem} = await import("./media.mjs");
   const main=document.getElementById("mainContent");
   const right=document.getElementById("rightContent");
   const side=document.getElementById("sideNav");
@@ -13,7 +14,7 @@
   const n=new URLSearchParams(location.search).get("mesa");
   const tableLabel=n&&/^(0?[1-9]|[12][0-9]|30)$/.test(n)?"Mesa "+String(Number(n)).padStart(2,"0"):"Mesa 08";
   if(table)table.textContent=tableLabel;
-  const state={page:"explorar",index:0,category:"Todos",search:"",favorites:new Set(),cart:[],orders:[],draft:null,cartOpen:false,modal:null,toastTimer:null,scrollLock:0};
+  const state={page:"explorar",index:0,category:"Todos",search:"",favorites:new Set(),cart:[],orders:[],draft:null,cartOpen:false,modal:null,toastTimer:null,scrollLock:0,mediaPaused:false,mediaMuted:true};
   const NAV=[
     {id:"explorar",title:"Explorar",icon:"▶"},
     {id:"cardapio",title:"Cardápio",icon:"▦"},
@@ -59,14 +60,54 @@
     else{state.favorites.add(id);announce("Adicionado aos favoritos");}
     render();
   }
+  let activeVideo=null;
+  function refreshMediaButtons(){
+    const play=main.querySelector('[data-action="toggle-media"]'),sound=main.querySelector('[data-action="toggle-sound"]');
+    if(play){play.textContent=state.mediaPaused?"▶":"Ⅱ";play.setAttribute("aria-label",state.mediaPaused?"Reproduzir vídeo":"Pausar vídeo");play.setAttribute("aria-pressed",String(!state.mediaPaused));}
+    if(sound){sound.textContent=state.mediaMuted?"♫̸":"♫";sound.setAttribute("aria-label",state.mediaMuted?"Ativar som":"Silenciar vídeo");sound.setAttribute("aria-pressed",String(!state.mediaMuted));}
+  }
+  function stopMedia(){
+    const prior=activeVideo;activeVideo=null;if(prior)prior.pause();
+  }
+  function failedMedia(v){
+    if(v!==activeVideo||v.dataset.failed)return;
+    v.dataset.failed="1";v.classList.remove("is-playing");v.pause();state.mediaPaused=true;refreshMediaButtons();
+    announce("Vídeo indisponível: exibindo a foto.");
+  }
+  function connectMedia(){
+    const v=main.querySelector(".reel-video");if(!v)return;
+    activeVideo=v;v.muted=state.mediaMuted;
+    v.addEventListener("playing",()=>{if(v===activeVideo)v.classList.add("is-playing");});
+    v.addEventListener("play",()=>{if(v===activeVideo){state.mediaPaused=false;refreshMediaButtons();}});
+    v.addEventListener("pause",()=>{if(v===activeVideo){state.mediaPaused=true;refreshMediaButtons();}});
+    v.addEventListener("error",()=>failedMedia(v));
+    v.querySelector("source")?.addEventListener("error",()=>failedMedia(v));
+    if(!state.mediaPaused&&canAutoplay({reducedMotion:isReducedMotion,saveData:!!navigator.connection?.saveData,hidden:document.hidden})){
+      v.play().catch(()=>{if(v===activeVideo){state.mediaPaused=true;refreshMediaButtons();}});
+    }else {state.mediaPaused=true;refreshMediaButtons();}
+  }
+  function toggleMedia(){
+    const v=activeVideo;if(!v||v.dataset.failed)return;
+    if(v.paused){state.mediaPaused=false;v.play().catch(()=>{state.mediaPaused=true;refreshMediaButtons();announce("Não foi possível reproduzir o vídeo.");});}
+    else{v.pause();state.mediaPaused=true;}
+    refreshMediaButtons();
+  }
+  function toggleSound(){
+    if(!activeVideo)return;state.mediaMuted=!state.mediaMuted;activeVideo.muted=state.mediaMuted;refreshMediaButtons();
+  }
+  function moveFeed(delta){
+    state.index=(state.index+delta+items.length)%items.length;state.mediaPaused=false;render();
+  }
   function renderFeed(){
     const item=items[state.index];
     const liked=state.favorites.has(item.id);
+    const media=videoForItem(item);
+    const videoMarkup=media?'<video class="reel-video" playsinline muted loop preload="none" poster="'+escapeHTML(item.image)+'" aria-label="Vídeo demonstrativo de '+escapeHTML(item.name)+'"><source src="'+escapeHTML(media.src)+'" type="'+escapeHTML(media.type)+'"></video>':"";
     return '<div class="feed-layout"><div class="feed-stage" aria-label="Prato '+(state.index+1)+' de '+items.length+'">'+
-      '<article class="reel">'+imageMarkup(item,"reel-image","eager")+'<div class="reel-placeholder" aria-hidden="true">'+item.emoji+'</div>'+
+      '<article class="reel">'+imageMarkup(item,"reel-image","eager")+videoMarkup+'<div class="reel-placeholder" aria-hidden="true">'+item.emoji+'</div>'+
       '<div class="reel-pager" aria-hidden="true">'+items.map((_,i)=>'<span class="'+(i===state.index?"active":"")+'"></span>').join("")+'</div>'+
-      '<div class="reel-top"><div class="reel-restaurant"><span class="restaurant-circle">S.</span> Studio Sabor</div><span class="media-label">FOTO ILUSTRATIVA · DEMO</span></div>'+
-      '<div class="reel-top-icons"><button type="button" data-action="help" aria-label="Como funciona a demonstração">?</button></div>'+
+      '<div class="reel-top"><div class="reel-restaurant"><span class="restaurant-circle">S.</span> Studio Sabor</div><span class="media-label">'+(media?"VÍDEO REAL · EXEMPLO":"FOTO ILUSTRATIVA · DEMO")+'</span>'+(media?'<a class="reel-credit" href="'+escapeHTML(media.page)+'" target="_blank" rel="noopener noreferrer">Vídeo: '+escapeHTML(media.author)+' · '+escapeHTML(media.license)+'</a>':"")+'</div>'+
+      '<div class="reel-top-icons">'+(media?'<button type="button" data-action="toggle-media" aria-label="Pausar vídeo" aria-pressed="true">Ⅱ</button><button type="button" data-action="toggle-sound" aria-label="Ativar som" aria-pressed="false">♫̸</button>':"")+'<button type="button" data-action="help" aria-label="Como funciona a demonstração">?</button></div>'+
       '<div class="reel-content"><p class="reel-kicker">'+escapeHTML(item.label)+' · '+escapeHTML(item.category)+'</p>'+
       '<h1 class="reel-title">'+escapeHTML(item.name)+'</h1><p class="reel-desc">'+escapeHTML(item.description)+'</p>'+
       '<div class="reel-price"><strong>'+brl(item.price)+'</strong><span>por porção</span></div>'+
@@ -160,6 +201,7 @@
       '<div class="side-panel"><div class="hero-food-icon" aria-hidden="true">🍽️</div><h3>Seu próximo favorito está aqui.</h3><p>Explore o cardápio, personalize seu prato e acompanhe uma simulação de pedido.</p></div><div class="right-helper"><span class="helper-icon">ⓘ</span><p>Studio Sabor, preços e pedidos são fictícios.</p></div>';
   }
   function render(){
+    stopMedia();
     renderNavigation();
     if(state.page==="explorar") main.innerHTML=renderFeed();
     else if(state.page==="cardapio"||state.page==="favoritos")renderCollection();
@@ -167,6 +209,7 @@
     else if(state.page==="pedido")renderOrders();
     else if(state.page==="cozinha")renderKitchen();
     renderRight();
+    if(state.page==="explorar")connectMedia();
   }
   function openModal(title,body,footer=""){
     const previous=state.modal?.previous||document.activeElement;
@@ -258,7 +301,9 @@
     if(action==="backdrop"&&event.target!==control)return;
     if(action==="nav"){setPage(control.dataset.page);return;}
     if(action==="explore"){event.preventDefault();setPage("explorar");return;}
-    if(action==="next"||action==="prev"){state.index=(state.index+(action==="next"?1:items.length-1))%items.length;render();return;}
+    if(action==="next"||action==="prev"){moveFeed(action==="next"?1:-1);return;}
+    if(action==="toggle-media"){toggleMedia();return;}
+    if(action==="toggle-sound"){toggleSound();return;}
     if(action==="fav"){toggleFavorite(control.dataset.id);return;}
     if(action==="detail"){openDetail(control.dataset.id);return;}
     if(action==="category"){state.category=control.dataset.category;renderCollection();return;}
@@ -300,23 +345,24 @@
       return;
     }
     if(state.page!=="explorar"||event.target.closest("input,textarea,[contenteditable]"))return;
-    if(event.key==="ArrowDown"||event.key==="ArrowRight"){event.preventDefault();state.index=(state.index+1)%items.length;render();}
-    if(event.key==="ArrowUp"||event.key==="ArrowLeft"){event.preventDefault();state.index=(state.index+items.length-1)%items.length;render();}
+    if(event.key==="ArrowDown"||event.key==="ArrowRight"){event.preventDefault();moveFeed(1);}
+    if(event.key==="ArrowUp"||event.key==="ArrowLeft"){event.preventDefault();moveFeed(-1);}
   });
   let swipeStart=null;
   main.addEventListener("pointerdown",e=>{if(state.page==="explorar"&&e.target.closest(".reel"))swipeStart={y:e.clientY,x:e.clientX};});
   main.addEventListener("pointerup",e=>{
     if(!swipeStart||state.page!=="explorar"){swipeStart=null;return;}
     const dy=e.clientY-swipeStart.y,dx=e.clientX-swipeStart.x;swipeStart=null;
-    if(Math.abs(dy)>70&&Math.abs(dy)>Math.abs(dx)*1.2){state.index=(state.index+(dy<0?1:items.length-1))%items.length;render();}
+    if(Math.abs(dy)>70&&Math.abs(dy)>Math.abs(dx)*1.2){moveFeed(dy<0?1:-1);}
   });
   main.addEventListener("wheel",e=>{
     if(state.page!=="explorar"||!e.target.closest(".feed-layout")||Math.abs(e.deltaY)<16)return;
     e.preventDefault();
     const now=Date.now();
     if(now-state.scrollLock<490)return;
-    state.scrollLock=now;state.index=(state.index+(e.deltaY>0?1:items.length-1))%items.length;render();
+    state.scrollLock=now;moveFeed(e.deltaY>0?1:-1);
   },{passive:false});
+  document.addEventListener("visibilitychange",()=>{if(document.hidden&&activeVideo){activeVideo.pause();state.mediaPaused=true;refreshMediaButtons();}});
   // Imagens são decorativas e externas; sem conexão não impedem a compra simulada.
   document.addEventListener("error",e=>{if(e.target instanceof HTMLImageElement){e.target.classList.add("image-failed");}},true);
   const hash=location.hash.replace("#","");
