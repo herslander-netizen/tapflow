@@ -1,0 +1,155 @@
+/* TapFlow · ALVO Digital · aplicação visual da marca v1.0.
+ * O lettering oficial é um SVG externo, sem ícone ou texto substituto.
+ * Este arquivo é carregado APÓS styles.css e experience.css.
+ */
+:root{
+  --tapflow-forest:#024519;
+  --tapflow-deep-forest:#003615;
+  --tapflow-lime:#B6E229;
+  --tapflow-cream:#FEFBF6;
+  --tapflow-ink:#101A13;
+  --tapflow-sage:#E6F1E7;
+  --bg:var(--tapflow-deep-forest);
+  --surface:var(--tapflow-forest);
+  --accent:var(--tapflow-lime);
+  --text:var(--tapflow-cream);
+  --muted:#BDCFBF;
+  --stroke:rgba(254,251,246,.18);
+  --ease:cubic-bezier(.22,1,.36,1);
+  font-family:"Sora",system-ui,-apple-system,sans-serif;
+}
+html{background:var(--tapflow-deep-forest)}
+body{background:var(--tapflow-deep-forest);font-family:"Sora",system-ui,-apple-system,sans-serif}
+button,input,textarea{font-family:inherit}
+.topbar{background:var(--tapflow-forest);border-bottom:1px solid rgba(254,251,246,.12);padding-inline:clamp(15px,2.5vw,28px)}
+.brand{width:auto;min-width:0;min-height:48px;display:inline-flex;align-items:center;padding:3px 0}
+.brand-logo{display:block;width:clamp(130px,13vw,162px);height:auto;aspect-ratio:1430/401;object-fit:contain;filter:brightness(0) invert(1);flex-shrink:0}
+.brand:focus-visible{outline:3px solid var(--tapflow-lime);outline-offset:4px;border-radius:6px}
+.demo-tag{border-color:rgba(182,226,41,.35);color:var(--tapflow-lime)}
+.table-indicator{color:var(--tapflow-cream)}
+.main-area{background:radial-gradient(ellipse at 58% 40%,#174B29 0%,#063A1D 55%,var(--tapflow-deep-forest) 100%)}
+.reel{background:linear-gradient(155deg,#25482A,#003615 72%);box-shadow:0 24px 60px #001d0c8c}
+.reel::before{background:linear-gradient(0deg,rgba(0,20,6,.96) 0%,rgba(0,20,6,.48) 38%,rgba(0,20,6,.06) 62%,rgba(0,20,6,.42) 100%)}
+.reel-kicker{color:var(--tapflow-lime)}
+.reel-title,.collection h1,.detail-title,.right-heading h2,.sidebar h1{font-family:"Sora",system-ui,sans-serif;letter-spacing:-.055em}
+.reel-cta,.btn-primary,.add-circle,.feed-controls .control-circle.primary{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.reel-cta{border-radius:16px;min-height:54px;box-shadow:0 12px 28px rgba(0,36,14,.25)}
+.reel-cta:focus-visible,.btn:focus-visible{outline:3px solid var(--tapflow-cream);outline-offset:3px}
+.reel-pager span.active{background:var(--tapflow-lime)}
+.feed-switch button.active{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.feed-controls .control-circle{min-width:44px;min-height:44px}
+.reel-top-icons button{min-width:44px;min-height:44px;background:rgba(0,34,12,.75)}
+.media-label{background:rgba(0,34,12,.75)}
+.reel-credit{background:rgba(0,34,12,.8)}
+/* Painéis editoriais claros */
+.sidebar,.rightbar{
+  color-scheme:light;
+  background:var(--tapflow-cream);
+  color:var(--tapflow-ink);
+  --text:var(--tapflow-ink);
+  --muted:#526757;
+  --stroke:rgba(2,69,25,.15);
+}
+.sidebar{border-right:1px solid rgba(2,69,25,.13)}
+.sidebar h1{color:var(--tapflow-forest)}
+.sidebar h1 em{color:var(--tapflow-forest)}
+.sidebar-intro,.sidebar-bottom>p,.restaurant-mini small{color:#526757}
+.side-divider{background:#D1E1D5}
+.side-link{color:#30513D;min-height:47px}
+.side-link.active{background:var(--tapflow-sage);color:var(--tapflow-forest);box-shadow:inset 4px 0 var(--tapflow-lime)}
+.side-link .mini-count{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.restaurant-avatar{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.rightbar{border-left:1px solid rgba(2,69,25,.12)}
+.right-heading h2{color:var(--tapflow-forest)}
+.rightbar .side-panel{background:var(--tapflow-sage);border-color:#CFDFD2}
+.rightbar .side-panel p,.rightbar .right-helper{color:#526757}
+.rightbar .hero-food-icon{background:var(--tapflow-cream)}
+.rightbar .summary-stat{background:var(--tapflow-sage)}
+/* Catálogo creme com cartões brancos; contraste independente das imagens */
+.collection{
+  background:var(--tapflow-cream);
+  color:var(--tapflow-ink);
+  color-scheme:light;
+  --text:var(--tapflow-ink);
+  --muted:#526757;
+  --stroke:rgba(2,69,25,.16);
+}
+.collection h1{color:var(--tapflow-forest)}
+.collection .eyebrow,.collection .food-card-label{color:var(--tapflow-forest)}
+.collection-desc{color:#526757}
+.collection .search-field{background:#fff;border-color:#CBDDCE}
+.collection .search-field input{color:var(--tapflow-ink)}
+.collection .search-field input::placeholder{color:#647568}
+.collection .chips button{background:var(--tapflow-sage);color:var(--tapflow-forest);border:1px solid #D0E0D0;min-height:44px}
+.collection .chips button.active{background:var(--tapflow-lime);border-color:var(--tapflow-lime);color:var(--tapflow-forest)}
+.food-card{background:#FFF;color:var(--tapflow-ink);border:1px solid #DFE9DF;border-radius:24px;box-shadow:0 6px 24px rgba(2,69,25,.055)}
+.food-card h3,.food-card .row strong{color:var(--tapflow-forest)}
+.food-card p{color:#526757}
+.food-card .food-card-label{color:var(--tapflow-forest)}
+.food-card-media{background:var(--tapflow-sage)}
+.add-circle{min-width:44px;min-height:44px}
+.collection .side-panel{background:var(--tapflow-sage);border-color:#CDDFD1}
+.collection .side-panel p{color:#526757}
+.collection .empty-card h2{color:var(--tapflow-forest)}
+/* Bottom sheets do carrinho e detalhes combinam com a área de catálogo */
+.sheet{
+  color-scheme:light;
+  background:var(--tapflow-cream);
+  color:var(--tapflow-ink);
+  --text:var(--tapflow-ink);
+  --muted:#526757;
+  --stroke:rgba(2,69,25,.18);
+}
+.sheet-head{background:rgba(254,251,246,.96);border-color:#D8E5DA}
+.sheet-head h2,.detail-title{color:var(--tapflow-forest)}
+.sheet-foot{background:linear-gradient(transparent,var(--tapflow-cream) 19%)}
+.sheet .close-btn,.quantity button,.qty-actions button{background:var(--tapflow-sage);color:var(--tapflow-forest);border-color:#C8DACB;min-width:44px;min-height:44px}
+.sheet .input{background:#FFF;color:var(--tapflow-ink);border-color:#BFD3C4}
+.sheet .option-row{background:#FFF;border-color:#D8E6DA}
+.sheet .order-id,.sheet .summary-stat{background:var(--tapflow-sage);border-color:#B4D6B9}
+.sheet .order-id b{color:var(--tapflow-forest)}
+.sheet .demo-note{background:#FFF4D9;color:#67400B;border-color:#EBD9A8}
+.sheet .step .step-dot{background:var(--tapflow-sage);color:var(--tapflow-forest)}
+.sheet .step.active .step-dot{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.sheet .step.done .step-dot{background:#D6EAD8;color:var(--tapflow-forest)}
+.sheet .cart-line{border-color:#D9E6DB}
+.sheet .btn-secondary{background:var(--tapflow-sage);color:var(--tapflow-forest);border-color:#C8DACB}
+.sheet .btn-ghost{border-color:var(--tapflow-forest);color:var(--tapflow-forest)}
+.sheet .label-heading,.sheet .field-label{color:var(--tapflow-ink)}
+.sheet .option-row input{accent-color:var(--tapflow-forest)}
+.sheet .cart-thumb,.sheet .detail-image{background:var(--tapflow-sage)}
+/* Estados, notificações, ícones e microinterações */
+.favorite-inline{color:var(--tapflow-forest)}
+.reel .favorite-inline{color:var(--tapflow-lime)}
+.toast{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+.btn,.reel-cta,.add-circle,.bottom-nav button,.feed-controls button{touch-action:manipulation}
+.kitchen-ticket{background:#ECF5ED;border:1px solid #C9DECD;color:var(--tapflow-ink)}
+.kitchen-ticket .ticket-meta{color:#526757}
+.kitchen-ticket h3{color:var(--tapflow-forest)}
+@media(max-width:740px){
+  .topbar{background:linear-gradient(180deg,rgba(0,47,19,.97) 0%,rgba(0,47,19,.89) 67%,rgba(0,47,19,0) 100%);padding:6px 16px}
+  .brand{min-height:48px}
+  .brand-logo{width:clamp(114px,33vw,142px)}
+  .topbar-context{gap:7px}
+  .demo-tag{border-color:rgba(182,226,41,.45);background:rgba(0,30,12,.45)}
+  .table-indicator{font-size:11px}
+  .bottom-nav{background:var(--tapflow-forest);border-top:1px solid rgba(255,255,255,.17)}
+  .bottom-nav button{color:rgba(254,251,246,.79);min-width:60px;min-height:44px}
+  .bottom-nav button.active{color:var(--tapflow-lime)}
+  .bottom-nav .mini-count{background:var(--tapflow-lime);color:var(--tapflow-forest)}
+  .feed-controls .control-circle{background:rgba(0,39,13,.8)}
+  .collection{padding-top:88px}
+  .food-card{border-radius:18px}
+  .sheet{border-radius:28px 28px 0 0}
+  .reel-content{padding-right:58px}
+  .reel-cta{border-radius:16px}
+}
+@media(max-width:370px){
+  .brand-logo{width:112px}
+  .topbar{padding-inline:11px}
+  .topbar-context{gap:5px}
+  .table-indicator{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .reel-image,.reel-video,.btn,.reel-cta{transition:none!important;animation:none!important}
+}
