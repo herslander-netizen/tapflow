@@ -29,3 +29,12 @@ test("Gemini admin bloqueado sem autenticação",async()=>{
  const r=await worker.fetch(req("/api/admin/ai/description","POST"),env);
  assert.equal(r.status,401);
 });
+test("piloto administrativo e cardápio publicado não abrem com flags ausentes",async()=>{
+ const paths=["/merchant.html","/cardapio/cafe/centro","/api/public/menu/cafe/centro",
+  "/v1/merchant/tenants","/api/merchant/store/appearance"];
+ for(const path of paths)assert.equal((await worker.fetch(req(path),env)).status,404,path);
+ for(const path of paths)assert.equal((await worker.fetch(req(path),{
+   ...env,TAPFLOW_MERCHANT_PREVIEW:"true",TAPFLOW_STOREFRONT_PREVIEW:"true",
+   TAPFLOW_MERCHANT_ORIGIN:"https://private-preview.test"
+ })).status,404,path);
+});

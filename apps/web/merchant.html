@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="same-origin">
+  <title>Painel do estabelecimento · TapFlow</title>
+  <link rel="stylesheet" href="./merchant.css">
+</head>
+<body>
+  <a class="skip" href="#main">Ir para o painel</a>
+  <header class="top">
+    <a href="./" aria-label="TapFlow, voltar ao cardápio"><img src="./tapflow-wordmark.svg" width="120" height="36" alt="TapFlow"></a>
+    <span>Painel do estabelecimento</span>
+  </header>
+  <main id="main">
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">PILOTO INTERNO</p>
+      <h1 id="page-title">Prepare seu cardápio</h1>
+      <p>Gerencie unidades, categorias, pratos e a aparência do cardápio.</p>
+      <p class="notice">Sem cobrança, pedidos reais ou mensagens. O acesso depende de uma sessão de administração verificada.</p>
+    </section>
+    <section id="local-access" class="card" hidden aria-labelledby="access-title">
+      <h2 id="access-title">Acesso local de teste</h2>
+      <p>Use um token temporário do seu ambiente local. Ele não será salvo.</p>
+      <form id="access-form">
+        <label for="access-token">Token temporário</label>
+        <input id="access-token" type="password" autocomplete="off" spellcheck="false" required>
+        <div class="actions"><button type="submit">Usar token nesta página</button><button id="clear-access" class="secondary" type="button" hidden>Limpar acesso local</button></div>
+      </form>
+    </section>
+    <p id="merchant-status" class="feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p id="merchant-error" class="error" role="alert" hidden></p>
+    <div id="panel" hidden>
+      <nav aria-label="Seções do painel">
+        <a href="#estabelecimento">Estabelecimento</a><a href="#unidades">Unidades</a><a href="#categorias">Categorias</a><a href="#itens">Pratos</a><a href="#adicionais">Adicionais</a><a href="#aparencia">Aparência</a>
+      </nav>
+      <section class="card" id="estabelecimento" aria-labelledby="estabelecimento-title">
+        <h2 id="estabelecimento-title">Estabelecimento</h2>
+        <p>Crie um estabelecimento para começar ou selecione o que já administra.</p>
+        <form id="form-tenant">
+          <label for="tenant-name">Nome do estabelecimento</label>
+          <input id="tenant-name" name="name" required maxlength="100">
+          <label for="tenant-slug">Identificador na URL</label>
+          <input id="tenant-slug" name="slug" required maxlength="48" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocapitalize="none" spellcheck="false" placeholder="ex.: studio-sabor">
+          <label for="tenant-first-location">Nome da primeira unidade</label>
+          <input id="tenant-first-location" name="locationName" required maxlength="100">
+          <button type="submit">Criar estabelecimento e unidade</button>
+        </form>
+        <hr>
+        <label for="tenant-scope">Estabelecimento ativo</label>
+        <select id="tenant-scope"><option value="">Selecione</option></select>
+        <button class="secondary" id="load-tenants" type="button">Atualizar estabelecimentos</button>
+      </section>
+      <section class="card" id="unidades" aria-labelledby="unidades-title">
+        <h2 id="unidades-title">Unidades</h2>
+        <form id="form-location">
+          <label for="location-name">Nome da unidade</label>
+          <input id="location-name" name="name" required maxlength="100">
+          <button type="submit">Criar unidade</button>
+        </form>
+        <ul id="location-list" class="entries" aria-label="Unidades cadastradas"></ul>
+        <label for="location-scope">Unidade ativa para o catálogo</label>
+        <select id="location-scope"><option value="">Selecione</option></select>
+      </section>
+      <section class="card" id="categorias" aria-labelledby="categorias-title">
+        <h2 id="categorias-title">Categorias</h2>
+        <form id="form-category">
+          <label for="category-name">Nome da categoria</label>
+          <input id="category-name" name="name" required maxlength="100">
+          <button type="submit">Criar categoria</button>
+        </form>
+        <ul id="category-list" class="entries" aria-label="Categorias cadastradas"></ul>
+      </section>
+      <section class="card" id="itens" aria-labelledby="itens-title">
+        <h2 id="itens-title">Pratos e produtos</h2>
+        <form id="form-item">
+          <label for="item-name">Nome</label>
+          <input id="item-name" name="name" required maxlength="100">
+          <label for="item-category">Categoria</label>
+          <select id="item-category" name="categoryId" required><option value="">Selecione</option></select>
+          <label for="item-description">Descrição <span>(opcional)</span></label>
+          <textarea id="item-description" name="description" rows="3" maxlength="500"></textarea>
+          <label for="item-price">Preço em reais</label>
+          <input id="item-price" name="price" inputmode="decimal" autocomplete="off" placeholder="29,90" required>
+          <label for="item-availability">Disponibilidade</label>
+          <select id="item-availability" name="availability"><option value="hidden">Oculto</option><option value="available">Disponível</option><option value="sold_out">Esgotado</option></select>
+          <button type="submit">Criar prato</button>
+        </form>
+        <ul id="item-list" class="entries" aria-label="Pratos cadastrados"></ul>
+      </section>
+      <section class="card" id="adicionais" aria-labelledby="adicionais-title">
+        <h2 id="adicionais-title">Adicionais</h2>
+        <form id="form-addon">
+          <label for="addon-item">Prato</label>
+          <select id="addon-item" name="itemId" required><option value="">Selecione</option></select>
+          <label for="addon-name">Nome do adicional</label>
+          <input id="addon-name" name="name" required maxlength="100">
+          <label for="addon-price">Preço em reais</label>
+          <input id="addon-price" name="price" inputmode="decimal" autocomplete="off" placeholder="5,00" required>
+          <label class="check"><input type="checkbox" name="isAvailable" checked> Disponível</label>
+          <button type="submit">Criar adicional</button>
+        </form>
+        <ul id="addon-list" class="entries" aria-label="Adicionais cadastrados"></ul>
+      </section>
+      <section class="card" id="aparencia" aria-labelledby="aparencia-title">
+        <h2 id="aparencia-title">Aparência do cardápio</h2>
+        <p>Salve um rascunho antes de publicar. A primeira publicação deixa o cardápio visível nas unidades ativas deste estabelecimento no piloto. Não ativa pedidos nem pagamentos.</p>
+        <form id="form-appearance">
+          <label for="theme-preset">Preset</label>
+          <select id="theme-preset" name="preset"></select>
+          <label for="theme-mode">Modo visual</label>
+          <select id="theme-mode" name="mode"><option value="dark">Escuro</option><option value="light">Claro</option></select>
+          <label for="theme-primary">Cor principal</label>
+          <input type="color" id="theme-primary" name="accent" value="#ccff33">
+          <label for="theme-background">Cor de fundo</label>
+          <input type="color" id="theme-background" name="background" value="#191919">
+          <div class="theme-example" id="appearance-example" aria-label="Amostra do tema"><strong>Seu cardápio</strong> <span>Cor de destaque</span></div>
+          <p id="appearance-state">Nenhum rascunho carregado.</p>
+          <div class="actions"><button type="submit">Salvar rascunho</button><button id="publish-appearance" class="secondary" type="button" disabled>Publicar rascunho salvo</button></div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script type="module" src="./merchant.mjs"></script>
+</body>
+</html>

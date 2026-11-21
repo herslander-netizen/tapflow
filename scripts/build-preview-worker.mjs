@@ -3,14 +3,14 @@ import {readFile,mkdir,writeFile} from "node:fs/promises";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
-const names=["index.html","styles.css","experience.css","theme.css","theme.mjs","theme-panel.mjs","app.js","domain.mjs","demo-data.js","media.mjs"];
+const names=["index.html","styles.css","experience.css","brand-theme.css","tapflow-wordmark.svg","theme.css","theme.mjs","theme-panel.mjs","app.js","mobile-ux.mjs","domain.mjs","demo-data.js","media.mjs"];
 const files={};
 for(const name of names)files["/"+name]=await readFile(resolve(root,"apps/web",name),"utf8");
 if(!files["/index.html"].includes("mainContent")||!files["/app.js"].includes("renderFeed"))throw Error("Fontes da experiência incompletas");
 const code=[
   "// TapFlow - preview demonstrativa ALVO Digital. Sem pedidos reais.",
   "const FILES="+JSON.stringify(files)+";",
-  "const MIME={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8'};",
+  "const MIME={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.svg':'image/svg+xml'};",
   "const CSP=\"default-src 'self'; base-uri 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; media-src 'self' https://upload.wikimedia.org; connect-src 'self'; object-src 'none'; frame-ancestors 'none';\";",
   "const headers=(type,cache)=>({'content-type':type,'cache-control':cache,'content-security-policy':CSP,'x-content-type-options':'nosniff','referrer-policy':'strict-origin-when-cross-origin','x-frame-options':'DENY'});",
   "export default {async fetch(request,env){",

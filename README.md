@@ -6,11 +6,14 @@ Plataforma SaaS independente de cardápio interativo em formato Reels, acessíve
 
 ## Situação
 
-Este repositório contém o **kit de planejamento e arranque**, não uma aplicação funcional nem uma publicação online. Não há banco criado, deploy, serviço pago ou checkout real.
+Este repositório contém a demonstração Reels e o **piloto de estabelecimento**: cadastro assistido, catálogo e publicação da aparência via D1. O piloto fica fechado por padrão e não muda a demonstração pública existente. Não há checkout real.
 
 ## Documentos para começar
 
+- [Piloto de estabelecimento: cadastro, aparência e publicação](docs/PILOTO_ESTABELECIMENTO.md)
 - [Documento mestre (PRD)](docs/PRD.md)
+- [Pesquisa de concorrentes, open source e roadmap — 21/11/2026](docs/PESQUISA_ESTRATEGICA_2026.md)
+- [Decisões propostas de arquitetura — ADR-001](docs/ADR_STACK_001.md)
 - [Prompt de arranque — Fases 0 e 1](docs/PROMPT_CODEX_FASE_0_1.md)
 - [Backlog](docs/BACKLOG.csv)
 - [Tokens de identidade propostos](packages/ui/tokens/lime-noir.json)
@@ -20,7 +23,7 @@ Este repositório contém o **kit de planejamento e arranque**, não uma aplica�
 
 ```text
 apps/web/                   interface do consumidor e estabelecimento
-apps/api/                   backend e endpoints (futuro)
+apps/api/                   backend e endpoints piloto
 packages/ui/                componentes e design tokens
 packages/domain/            regras e invariantes do negócio
 packages/contracts/         contratos e esquemas de validação
@@ -45,11 +48,11 @@ Leia `docs/PRD.md` e execute apenas o escopo permitido em `docs/PROMPT_CODEX_FAS
 
 ---
 
-**Proprietária:** ALVO Digital · **Status:** documentação inicial · **Sem vínculo com a KAIRÓS Produtora**
+**Proprietária:** ALVO Digital · **Status:** piloto em validação · **Sem vínculo com a KAIRÓS Produtora**
 
 ## Demonstração interativa (branch de desenvolvimento)
 
-A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a partir da raiz (Node 20+) e abra `http://127.0.0.1:4173`.
+A primeira jornada navegável está em `apps/web/`. Execute `npm run dev` a partir da raiz (Node 22+) e abra `http://127.0.0.1:4173`.
 O comando `npm test` valida regras locais de preços, adicionais e estados; mais informações em [docs/PROTOTIPO_DEMO.md](docs/PROTOTIPO_DEMO.md).
 
 **Atenção:** fotos, pedidos, preços e cozinha são demonstrativos. Nenhuma integração real de pagamento, NFC, QR, banco ou restaurante foi ativada.

@@ -1,4 +1,4 @@
--- TapFlow / ALVO Digital — proposta de migração D1 NÃO APLICADA.
+-- TapFlow / ALVO Digital — migração aditiva idempotente para a aparência autenticada.
 -- Executar somente no D1 exclusivo do TapFlow após autenticação e validação
 -- das regras de escopo. Nenhuma escrita deve ser exposta publicamente.
 PRAGMA foreign_keys = ON;

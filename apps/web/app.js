@@ -3,6 +3,7 @@
   const {brl,quantity,cartLine,cartTotal,nextOrderStatus} = await import("./domain.mjs");
   const {items} = await import("./demo-data.js");
   const {canAutoplay,videoForItem} = await import("./media.mjs");
+  const {swipeDirection,actionIsInteractive} = await import("./mobile-ux.mjs");
   const main=document.getElementById("mainContent");
   const right=document.getElementById("rightContent");
   const side=document.getElementById("sideNav");
@@ -349,11 +350,18 @@
     if(event.key==="ArrowUp"||event.key==="ArrowLeft"){event.preventDefault();moveFeed(-1);}
   });
   let swipeStart=null;
-  main.addEventListener("pointerdown",e=>{if(state.page==="explorar"&&e.target.closest(".reel"))swipeStart={y:e.clientY,x:e.clientX};});
+  main.addEventListener("pointerdown",e=>{
+    if(e.isPrimary&&state.page==="explorar"&&e.target.closest(".reel")&&!actionIsInteractive(e.target)){
+      swipeStart={id:e.pointerId,y:e.clientY,x:e.clientX};
+    }
+  });
+  main.addEventListener("pointercancel",e=>{if(swipeStart?.id===e.pointerId)swipeStart=null;});
   main.addEventListener("pointerup",e=>{
-    if(!swipeStart||state.page!=="explorar"){swipeStart=null;return;}
-    const dy=e.clientY-swipeStart.y,dx=e.clientX-swipeStart.x;swipeStart=null;
-    if(Math.abs(dy)>70&&Math.abs(dy)>Math.abs(dx)*1.2){moveFeed(dy<0?1:-1);}
+    if(swipeStart?.id!==e.pointerId)return;
+    const {y,x}=swipeStart;swipeStart=null;
+    if(state.page!=="explorar"||!e.target.closest(".reel"))return;
+    const direction=swipeDirection({dy:e.clientY-y,dx:e.clientX-x,fromInteractive:actionIsInteractive(e.target)});
+    if(direction)moveFeed(direction);
   });
   main.addEventListener("wheel",e=>{
     if(state.page!=="explorar"||!e.target.closest(".feed-layout")||Math.abs(e.deltaY)<16)return;

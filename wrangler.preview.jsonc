@@ -7,9 +7,12 @@
   "assets": {
     "directory": "apps/web",
     "binding": "ASSETS",
+    "html_handling": "none",
     "run_worker_first": [
       "/api/*",
-      "/v1/*"
+      "/v1/*",
+      "/cardapio/*",
+      "/merchant.html"
     ]
   },
   "d1_databases": [

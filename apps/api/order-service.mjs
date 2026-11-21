@@ -101,6 +101,12 @@ const guardedSql=(ctx,quote,catalog)=>{
       bind.push(ctx.tenantId,line.itemId,addon.id,addon.price);
     }
   }
+  // Checked again inside the transactional insert, against the database clock,
+  // so a session revoked or expired after initial authorization cannot create an order.
+  clauses.push("EXISTS (SELECT 1 FROM order_sessions WHERE session_hash=? AND tenant_id=? "+
+    "AND location_id=? AND table_id=? AND revoked_at_ms IS NULL "+
+    "AND expires_at_ms>CAST(unixepoch('subsec') * 1000 AS INTEGER))");
+  bind.push(ctx.sessionHash,ctx.tenantId,ctx.locationId,ctx.tableId);
   return {where:clauses.join(" AND "),bind};
 };
 async function repeatOrder(db,ctx,input,key){
@@ -132,7 +138,7 @@ async function submit(db,ctx,quote,catalog,key){
       "SELECT ?,?,?,?,?,'submitted','not_required',?,'BRL' WHERE "+guard.where)
       .bind(orderId,ctx.tenantId,ctx.locationId,ctx.tableId,ctx.sessionHash,quote.total,...guard.bind),
     db.prepare("INSERT OR IGNORE INTO order_idempotency(tenant_id,actor_session_hash,idempotency_key,request_hash,order_id) "+
-      "VALUES (?,?,?,?,?)").bind(...idem,orderId)
+      "SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM orders WHERE id=? AND tenant_id=?)").bind(...idem,orderId,orderId,ctx.tenantId)
   ];
   for(let i=0;i<quote.lines.length;i++){
     const l=quote.lines[i];
@@ -149,7 +155,7 @@ async function submit(db,ctx,quote,catalog,key){
     "WHERE i.tenant_id=? AND i.actor_session_hash=? AND i.idempotency_key=?").bind(ctx.tenantId,ctx.sessionHash,key));
   const results=await db.batch(stmts);
   const saved=results.at(-1)?.results?.[0];
-  if(!saved)throw Error("Pedido não confirmado no banco");
+  if(!saved)return {status:409,body:{error:"Sessão, mesa ou cardápio mudou; reabra o pedido"}};
   if(saved.request_hash!==requestHash)return {status:409,body:{error:"Chave de idempotência usada para outro pedido"}};
   const created=results[1]?.meta?.changes===1;
   return {status:created?201:200,body:{id:saved.order_id,status:saved.status,

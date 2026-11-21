@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TapFlow · Laboratório mesa 04</title>
+<link rel="stylesheet" href="/pilot.css">
+<main>
+  <header><p class="overline">ALVO DIGITAL · PILOTO LOCAL</p><h1>TapFlow<span>.</span></h1>
+    <p>Cozinha fictícia · Mesa 04 · Sem pagamentos ou mensagens</p></header>
+  <section aria-labelledby="admission"><h2 id="admission">1. Abrir a mesa</h2>
+    <p>Uma etiqueta só abre o cardápio. Neste laboratório, a equipe é simulada para liberar um código descartável.</p>
+    <button id="start">Simular liberação da mesa</button><p id="authState" aria-live="polite"></p>
+  </section>
+  <section aria-labelledby="cart"><h2 id="cart">2. Montar o pedido</h2>
+    <p class="dish">Smash do piloto <strong>R$ 28,00</strong></p>
+    <label><input id="cheese" type="checkbox" disabled> Queijo extra · R$ 4,00</label>
+    <p id="price">Confirme o total pelo servidor antes de pedir.</p>
+    <div class="buttons"><button id="quote" disabled>Cotar pedido</button><button id="order" disabled>Confirmar simulação</button></div>
+    <p id="orderState" aria-live="polite"></p>
+  </section>
+  <section aria-labelledby="follow"><h2 id="follow">3. Acompanhar</h2>
+    <p id="trackingState" aria-live="polite">Nenhum acompanhamento nesta aba.</p>
+    <div class="buttons"><button id="refresh" disabled>Atualizar status</button><button id="recover" class="secondary" hidden>Tentar recuperar acompanhamento</button><button id="clear" class="secondary" disabled>Esquecer nesta aba</button></div>
+    <p id="storageState" class="small"></p>
+  </section>
+</main>
+<script type="module" src="/pilot.mjs"></script>
+</html>
