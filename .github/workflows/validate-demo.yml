@@ -39,3 +39,22 @@ jobs:
         run: npm test
       - name: Build da prévia (sem publicação)
         run: npm run build:preview
+      - name: Verificar disponibilidade HTTP da prévia publicada
+        run: |
+          set -euo pipefail
+          BASE="https://tapflow-aparencia-demo.tapflowse.workers.dev"
+          curl --fail --show-error --silent --location --retry 3 --retry-all-errors --max-time 25 "$BASE/__preview/status" -o status.json
+          python3 - <<'PY'
+          import json
+          data=json.load(open("status.json"))
+          assert data["product"]=="TapFlow"
+          assert data["demo"] is True
+          assert data["realPayments"] is False
+          assert data["ordersEnabled"] is False
+          print("Worker em funcionamento e sem pedidos/pagamentos reais.")
+          PY
+          curl --fail --show-error --silent --location --retry 3 --retry-all-errors --max-time 25 "$BASE/" -o index.html
+          grep -q "theme-panel.mjs" index.html
+          grep -q "theme.css" index.html
+          curl --fail --show-error --silent --location --retry 3 --retry-all-errors --max-time 25 "$BASE/theme.mjs" -o theme.mjs
+          grep -q THEME_PRESETS theme.mjs
