@@ -1,0 +1,33 @@
+name: Banco (migrações, RLS e testes)
+
+# Ensaia as migrações num Postgres descartável do próprio CI. Não usa segredos, não acessa
+# nenhum projeto Supabase e não faz deploy.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  banco:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Testes de banco
+        run: tests/integration/banco/rodar.sh

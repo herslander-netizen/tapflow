@@ -6,7 +6,9 @@ Plataforma SaaS independente de cardápio interativo em formato Reels, acessíve
 
 ## Situação
 
-Este repositório contém o **kit de planejamento e arranque**, não uma aplicação funcional nem uma publicação online. Não há banco criado, deploy, serviço pago ou checkout real.
+Este repositório contém o **kit de planejamento e arranque**, não uma aplicação funcional nem uma publicação online. Não há banco criado na nuvem, deploy, serviço pago ou checkout real.
+
+O esquema do banco (migrações, RLS, funções de pedido e pagamento e testes de isolamento) está em `supabase/` e foi testado só num Postgres local. Veja [Banco](docs/BANCO.md).
 
 ## Documentos para começar
 
@@ -14,6 +16,7 @@ Este repositório contém o **kit de planejamento e arranque**, não uma aplica�
 - [Pesquisa de concorrentes, open source e roadmap — 21/11/2026](docs/PESQUISA_ESTRATEGICA_2026.md)
 - [Decisões propostas de arquitetura — ADR-001](docs/ADR_STACK_001.md)
 - [Prompt de arranque — Fases 0 e 1](docs/PROMPT_CODEX_FASE_0_1.md)
+- [Banco: tabelas, permissões, funções e testes](docs/BANCO.md)
 - [Backlog](docs/BACKLOG.csv)
 - [Tokens de identidade propostos](packages/ui/tokens/lime-noir.json)
 - [Diretrizes permanentes de agentes](AGENTS.md)
@@ -26,7 +29,7 @@ apps/api/                   backend e endpoints (futuro)
 packages/ui/                componentes e design tokens
 packages/domain/            regras e invariantes do negócio
 packages/contracts/         contratos e esquemas de validação
-supabase/migrations/        migrações (futuro; banco próprio)
+supabase/migrations/        migrações com RLS (banco próprio, ainda não aplicadas)
 supabase/seed/              dados fictícios para testes
 tests/unit/                 testes de unidade
 tests/integration/          testes de integração
